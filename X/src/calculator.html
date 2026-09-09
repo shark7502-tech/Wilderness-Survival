@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小算盤</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .calculator {
+            background-color: #2d2d2d;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            width: 320px;
+        }
+
+        .calculator h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .display {
+            background-color: #1c1c1c;
+            color: #00ff00;
+            font-size: 32px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            text-align: right;
+            min-height: 60px;
+            word-wrap: break-word;
+            word-break: break-all;
+            border: 2px solid #00ff00;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .number {
+            background-color: #404040;
+            color: #ffffff;
+        }
+
+        .number:hover {
+            background-color: #505050;
+            transform: scale(1.05);
+        }
+
+        .number:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background-color: #ff9500;
+            color: white;
+        }
+
+        .operator:hover {
+            background-color: #ffb143;
+            transform: scale(1.05);
+        }
+
+        .operator:active {
+            transform: scale(0.95);
+        }
+
+        .equals {
+            background-color: #4caf50;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background-color: #66bb6a;
+            transform: scale(1.05);
+        }
+
+        .equals:active {
+            transform: scale(0.95);
+        }
+
+        .clear {
+            background-color: #f44336;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .clear:hover {
+            background-color: #ef5350;
+            transform: scale(1.05);
+        }
+
+        .clear:active {
+            transform: scale(0.95);
+        }
+
+        .delete {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .delete:hover {
+            background-color: #42a5f5;
+            transform: scale(1.05);
+        }
+
+        .delete:active {
+            transform: scale(0.95);
+        }
+
+        .footer {
+            text-align: center;
+            color: #aaa;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        /* Feedback floating button */
+        .feedback-button {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            background: #ff9800;
+            color: #fff;
+            border-radius: 999px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .feedback-button:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>計算器</h1>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">清除 (C)</button>
+            <button class="delete" onclick="deleteLast()">刪除</button>
+            <button class="operator" onclick="appendOperator('/')" title="除法">÷</button>
+            
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('*')" title="乘法">×</button>
+
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')" title="減法">-</button>
+
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')" title="加法">+</button>
+
+            <button class="number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+            <button class="number" onclick="appendDecimal()">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+        <div class="footer">
+            <p>使用鍵盤也可以操作</p>
+        </div>
+    </div>
+
+    <!-- Floating feedback link (opens the provided Google Form) -->
+    <a class="feedback-button" id="feedbackLink" href="https://docs.google.com/forms/d/1FubnsrNqKbt7CE-KbsHYNbr2N3SjkbM6lz6zpA4PGt0/viewform" target="_blank" rel="noopener noreferrer" title="填寫意見回饋">✉</a>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentInput = '0';
+        let previousInput = '';
+        let operator = null;
+        let shouldResetDisplay = false;
+
+        // 追加數字
+        function appendNumber(number) {
+            if (shouldResetDisplay) {
+                currentInput = number;
+                shouldResetDisplay = false;
+            } else {
+                currentInput = currentInput === '0' ? number : currentInput + number;
+            }
+            updateDisplay();
+        }
+
+        // 追加小數點
+        function appendDecimal() {
+            if (shouldResetDisplay) {
+                currentInput = '0.';
+                shouldResetDisplay = false;
+            } else if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        // 追加運算符
+        function appendOperator(op) {
+            if (operator !== null && !shouldResetDisplay) {
+                calculate();
+            }
+            previousInput = currentInput;
+            operator = op;
+            shouldResetDisplay = true;
+        }
+
+        // 計算結果
+        function calculate() {
+            if (operator === null || shouldResetDisplay) {
+                return;
+            }
+
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = current !== 0 ? prev / current : 'Error';
+                    break;
+                default:
+                    return;
+            }
+
+            currentInput = result.toString();
+            operator = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        // 清除所有
+        function clearDisplay() {
+            currentInput = '0';
+            previousInput = '';
+            operator = null;
+            shouldResetDisplay = false;
+            updateDisplay();
+        }
+
+        // 刪除最後一個字符
+        function deleteLast() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        // 更新顯示
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        // 鍵盤支持
+        document.addEventListener('keydown', function(event) {
+            if (event.key >= '0' && event.key <= '9') {
+                appendNumber(event.key);
+            } else if (event.key === '.') {
+                appendDecimal();
+            } else if (event.key === '+' || event.key === '-') {
+                appendOperator(event.key);
+            } else if (event.key === '*') {
+                event.preventDefault();
+                appendOperator('*');
+            } else if (event.key === '/') {
+                event.preventDefault();
+                appendOperator('/');
+            } else if (event.key === 'Enter' || event.key === '=') {
+                event.preventDefault();
+                calculate();
+            } else if (event.key === 'Backspace') {
+                event.preventDefault();
+                deleteLast();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            }
+        });
+
+        // 初始化
+        updateDisplay();
+    </script>
+    <!-- Player client: optional connection to admin backend for realtime updates / private messages -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        (function(){
+            // Attempts to connect to a backend at localhost:3000 if available.
+            // This is optional — if there's no backend running the code silently fails.
+            const backendUrl = window.ADMIN_BACKEND_URL || 'http://localhost:3000';
+            let socket;
+            try {
+                socket = io(backendUrl, { transports: ['websocket', 'polling'] });
+            } catch (e) {
+                console.warn('admin backend socket init failed', e);
+                return;
+            }
+
+            function registerPlayer() {
+                let pid = sessionStorage.getItem('playerId');
+                let pname = sessionStorage.getItem('playerName') || '';
+                if (!pid) {
+                    pid = prompt('Enter player ID for backend (e.g. player1)', 'player1');
+                    if (!pid) return;
+                    pname = prompt('Enter player name (optional)', pname) || pname;
+                    sessionStorage.setItem('playerId', pid);
+                    sessionStorage.setItem('playerName', pname);
+                }
+                socket.emit('register', { role: 'player', id: pid, name: pname });
+            }
+
+            socket.on('connect', ()=>{
+                console.log('connected to admin backend');
+                registerPlayer();
+            });
+
+            // Listen for private messages from admin
+            socket.on('private:message', (data)=>{
+                // Only player sees this
+                try { alert('[來自管理員]\n' + (data && data.text ? data.text : JSON.stringify(data))); } catch(e){ console.log('private message', data); }
+            });
+
+            // Periodic heartbeat to server (location, items, etc.)
+            function sendHeartbeat(){
+                const pid = sessionStorage.getItem('playerId');
+                if (!pid || !socket.connected) return;
+                const payload = {
+                    id: pid,
+                    name: sessionStorage.getItem('playerName') || pid,
+                    location: { map: 'calculator_screen', x: 0, y:0 },
+                    progress: { level: 1 },
+                    items: []
+                };
+                socket.emit('player:heartbeat', payload);
+            }
+
+            setInterval(sendHeartbeat, 10000); // every 10s
+        })();
+    </script>
+</body>
+</html>

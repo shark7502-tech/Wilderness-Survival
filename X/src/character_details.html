@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孫氏集團 - 角色全身描寫</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 3px solid #d4af37;
+            padding-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: 2px solid #d4af37;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #d4af37;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%);
+            color: #000;
+        }
+
+        .character-detail {
+            background: rgba(0, 0, 0, 0.5);
+            border: 3px solid #d4af37;
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 50px;
+            display: none;
+        }
+
+        .character-detail.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-header {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+            align-items: start;
+        }
+
+        .character-visual {
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid #d4af37;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .character-emoji {
+            font-size: 120px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .character-name {
+            font-size: 32px;
+            color: #d4af37;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .character-role {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .basic-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .info-item {
+            background: rgba(212, 175, 55, 0.05);
+            padding: 8px;
+            border-left: 2px solid #d4af37;
+        }
+
+        .info-label {
+            color: #d4af37;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            color: #fff;
+            margin-top: 3px;
+        }
+
+        .character-info {
+            flex: 1;
+        }
+
+        .character-bio {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #d4af37;
+            padding: 15px;
+            border-radius: 5px;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .section {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #d4af37;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            color: #d4af37;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 10px;
+        }
+
+        .fullbody-description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #d4af37;
+            margin-bottom: 20px;
+            line-height: 2;
+            font-size: 14px;
+        }
+
+        .fullbody-part {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: start;
+        }
+
+        .part-label {
+            color: #d4af37;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .part-description {
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        .grid-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .grid-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-left: 3px solid #d4af37;
+            border-radius: 3px;
+        }
+
+        .grid-item-label {
+            color: #d4af37;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .grid-item-content {
+            color: #fff;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .traits-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .trait-tag {
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .relationship-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .relationship-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-left: 3px solid #d4af37;
+            border-radius: 3px;
+        }
+
+        .relationship-name {
+            color: #d4af37;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .relationship-detail {
+            color: #aaa;
+            font-size: 12px;
+            margin: 3px 0;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .emphasis {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #d4af37;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            color: #d4af37;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .tab:hover {
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%);
+            color: #000;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .detail-header {
+                grid-template-columns: 1fr;
+            }
+
+            .character-visual {
+                margin-bottom: 20px;
+            }
+
+            .fullbody-part {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(212, 175, 55, 0.3);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 孫氏集團 - 角色全身描寫</h1>
+            <p>深入瞭解每位角色的完整外觀、個性與故事</p>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn active" onclick="showCharacter('chenFeng')">👨 陳風</button>
+            <button class="nav-btn" onclick="showCharacter('sunLili')">👩‍💼 孫莉莉</button>
+            <button class="nav-btn" onclick="showCharacter('shuLi')">👩 淑麗</button>
+            <button class="nav-btn" onclick="showCharacter('aLian')">👩‍🦰 阿蓮</button>
+        </div>
+
+        <!-- ============= 陳風詳細描寫 ============= -->
+        <div class="character-detail active" id="chenFeng-detail">
+            <div class="detail-header">
+                <div class="character-visual">
+                    <span class="character-emoji">👨</span>
+                    <div class="character-name">陳風</div>
+                    <div class="character-role">孫氏集團底層員工</div>
+                    <div class="basic-info">
+                        <div class="info-item">
+                            <div class="info-label">性別</div>
+                            <div class="info-value">男性</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">年齡</div>
+                            <div class="info-value">22歲</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">身高</div>
+                            <div class="info-value">175cm</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">體重</div>
+                            <div class="info-value">68kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="character-info">
+                    <div class="character-bio">
+                        <strong>📝 人物簡介</strong><br><br>
+                        陳風是遊戲的主角——一位平凡而踏實的22歲上班族。他來自普通家庭，父母都是藍領工人。進入孫氏集團已經三年，雖然兢兢業業但升職無望，每月工資勉強維持生活。<br><br>
+                        他的人生似乎陷入了無盡的循環，每天重複著枯燥的工作。內心深處渴望改變，卻始終缺乏勇氣邁出那一步。他經常懷疑自己是否還有其他可能性。在阿蓮的陪伴下，陳風開始反思自己的人生......
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('chenFeng', 'appearance')">👔 全身外觀</div>
+                <div class="tab" onclick="switchTab('chenFeng', 'personality')">💭 個性心理</div>
+                <div class="tab" onclick="switchTab('chenFeng', 'lifestyle')">🕐 日常生活</div>
+            </div>
+
+            <!-- 外觀描寫 -->
+            <div class="tab-content active" id="chenFeng-appearance">
+                <div class="section">
+                    <h3>👔 全身外觀詳寫</h3>
+                    <div class="fullbody-description">
+                        <div class="fullbody-part">
+                            <div class="part-label">整體氣質</div>
+                            <div class="part-description">消瘦中等身材，膚色偏白，長期室內辦公留下的蒼白痕跡。眼神略帶疲憊，卻能看出內心的認真與謹慎。嘴角總帶著淡淡的憂鬱，好像在思考著什麼沉重的事情。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">頭部髮型</div>
+                            <div class="part-description">黑色短髮，長度在耳朵上方，髮質較軟。髮型簡潔實在，沒有特別的打理，看起來稍微有些蓬亂。有時會有頭皮屑，顯示他生活壓力較大，缺乏充分的休息。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">上半身</div>
+                            <div class="part-description">穿著白色或淺藍色正裝襯衫，領口規整但常有皺褶。袖子卷至手腕，內側有發黃的汗漬痕跡。襯衫下是深灰色西裝外套，尺寸剛好但明顯缺乏質感。外套口袋裡常放著記事本和黑色簽字筆。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">配飾</div>
+                            <div class="part-description">戴著一塊銀色手錶（便宜款），表帶有些褪色，玻璃上有細微的刮痕。深色系領帶（多為黑或深藍），打結方式規範但缺乏技巧。領帶最底端經常比褲子頭稍長一些。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">下半身</div>
+                            <div class="part-description">深灰色西褲，版型簡樸，腰部略緊（顯示他吃得有點多來舒緩壓力）。褲子膝蓋處有泛白現象，經常擦拭的痕跡。褲腳與鞋面的長度比例略顯不協調。黑色皮帶，簡樸款式，金屬扣已經磨損。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">雙手與雙足</div>
+                            <div class="part-description">雙手略顯蒼白，指甲修剪得整齊但有些甲床發白。右手食指和中指常有筆跡痕跡和輕微的老繭。鞋子是黑色皮鞋，款式普通，鞋面有時缺乏光澤，走路發出略顯沉重的聲音。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">姿態與氣場</div>
+                            <div class="part-description">站姿不夠挺直，肩膀微微下垂，好像承載著無形的重擔。走路時步伐略顯疲倦，速度平穩但缺乏自信。經常雙手交叉放在身前，呈現出自我保護的姿態。偶爾會無意識地調整眼鏡或整理衣角。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 個性心理 -->
+            <div class="tab-content" id="chenFeng-personality">
+                <div class="section">
+                    <h3>💭 個性特質與心理世界</h3>
+                    <div class="grid-section">
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">性格特質</div>
+                            <div class="traits-list">
+                                <span class="trait-tag">踏實</span>
+                                <span class="trait-tag">勤奮</span>
+                                <span class="trait-tag">守紀律</span>
+                                <span class="trait-tag">謙虛</span>
+                                <span class="trait-tag">內向</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">優點</div>
+                            <div class="grid-item-content">
+                                • 執行力強<br>
+                                • 認真負責<br>
+                                • 容易相處<br>
+                                • 學習能力強<br>
+                                • 細心觀察
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">缺點</div>
+                            <div class="grid-item-content">
+                                • 缺乏自信<br>
+                                • 容易被指示<br>
+                                • 主動性不足<br>
+                                • 社交能力一般<br>
+                                • 情感表達困難
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">內心世界</div>
+                            <div class="grid-item-content">
+                                陳風的內心充滿了矛盾。表面上他認真負責，但骨子裡渴望被看見。他常常懷疑自己的能力，擔心升職無望是因為自己不夠優秀。但他也知道，也許只是自己沒有找到正確的道路。<br><br>
+                                每天下班回家後，他會反覆思考一天的工作，擔心是否有地方做得不夠好。他習慣性地自我批評，但又缺乏改變的勇氣。阿蓮是他唯一傾吐心聲的人。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日常生活 -->
+            <div class="tab-content" id="chenFeng-lifestyle">
+                <div class="section">
+                    <h3>🕐 日常作息與習慣</h3>
+                    <div class="grid-section">
+                        <div class="grid-item">
+                            <div class="grid-item-label">早晨</div>
+                            <div class="grid-item-content">
+                                6:30 起床<br>
+                                6:35 簡單盥洗<br>
+                                6:50 早餐（白粥 + 榨菜）<br>
+                                7:30 出門上班
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">工作時段</div>
+                            <div class="grid-item-content">
+                                8:00-12:00 上午工作<br>
+                                12:00-13:00 午餐（和阿蓮一起）<br>
+                                13:00-18:00 下午工作<br>
+                                18:30 回家
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">晚間</div>
+                            <div class="grid-item-content">
+                                18:40 簡單晚餐<br>
+                                19:00-21:00 看書或上網<br>
+                                21:00 整理明天的工作<br>
+                                22:00 睡覺
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">周末</div>
+                            <div class="grid-item-content">
+                                周六 經常加班<br>
+                                周日 在家休息<br>
+                                偶爾 散步放鬆<br>
+                                經常 思考人生
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">日常習慣</div>
+                            <div class="grid-item-content">
+                                • 習慣性地檢查工作是否完成<br>
+                                • 喜歡在筆記本上記錄重要事項，字跡工整<br>
+                                • 頻繁咬指甲（緊張的表現）<br>
+                                • 經常調整眼鏡（即使他不戴眼鏡，這是緊張時的無意識動作）<br>
+                                • 聽輕音樂來舒緩壓力
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">興趣愛好</div>
+                            <div class="grid-item-content">
+                                • 閱讀工業相關書籍，渴望提升自己<br>
+                                • 下班後散步放鬆，思考人生<br>
+                                • 看一些勵志類的網絡文章，尋求精神寄託<br>
+                                • 偶爾聽輕音樂，特別是在感到失落時
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= 孫莉莉詳細描寫 ============= -->
+        <div class="character-detail" id="sunLili-detail">
+            <div class="detail-header">
+                <div class="character-visual">
+                    <span class="character-emoji">👩‍💼</span>
+                    <div class="character-name">孫莉莉</div>
+                    <div class="character-role">孫氏集團總裁</div>
+                    <div class="basic-info">
+                        <div class="info-item">
+                            <div class="info-label">性別</div>
+                            <div class="info-value">女性</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">年齡</div>
+                            <div class="info-value">26歲</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">身高</div>
+                            <div class="info-value">165cm</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">體重</div>
+                            <div class="info-value">52kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="character-info">
+                    <div class="character-bio">
+                        <strong>📝 人物簡介</strong><br><br>
+                        孫莉莉是孫氏集團的女性總裁，雖然只有26歲，卻已經掌控著一個龐大的商業帝國。富二代出身，但她用自己的實力將父親留下的企業擴大三倍。代表新時代職業女性，既溫柔又堅定。<br><br>
+                        表面上風光無限，但實際上承受著巨大的商業壓力和內心孤獨。她不允許自己失敗，也不知道如何放鬆。在她冷靜幹練的外表下，隱藏著對完美的執著追求......
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('sunLili', 'appearance')">👔 全身外觀</div>
+                <div class="tab" onclick="switchTab('sunLili', 'personality')">💭 個性心理</div>
+                <div class="tab" onclick="switchTab('sunLili', 'lifestyle')">🕐 日常生活</div>
+            </div>
+
+            <!-- 外觀描寫 -->
+            <div class="tab-content active" id="sunLili-appearance">
+                <div class="section">
+                    <h3>👔 全身外觀詳寫</h3>
+                    <div class="fullbody-description">
+                        <div class="fullbody-part">
+                            <div class="part-label">整體氣質</div>
+                            <div class="part-description">修長優雅的身材，膚色白皙光滑，經常保養，散發出高級感。目光銳利而充滿自信，眼神有種令人敬畏的威懾力。表情通常冷靜，嘴角帶著職業微笑，卻能讓人感受到其背後的權力感。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">頭部髮型</div>
+                            <div class="part-description">烏黑長髮，長度及肩膀下方，髮質光澤感十足。經常打理成大波浪捲，增加柔和感但不失氣場。髮型永遠打理得井井有條，彷彿她對生活的掌控力延伸到了每一根髮絲。髮香淡淡卻令人難忘。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">臉部妝容</div>
+                            <div class="part-description">精緻的專業妝容，五官精緻且輪廓立體。口紅多為深紅或枚紅色，顯得成熟而有品味。眼妝簡約但突出，眉毛修剪完美，每一筆都精確無誤。膚色勻亮，看不出任何瑕疵，顯示她花費大量時間在保養上。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">上半身</div>
+                            <div class="part-description">剪裁得體的白色或淺粉色絲質襯衫，領口簡潔高雅，常紮進褲子裡，完美展現腰部線條。上面套著精緻的深色西裝外套，剪裁完美貼身，往往帶有高級品牌標誌。外套口袋從不放任何東西，保持挺括感。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">配飾品味</div>
+                            <div class="part-description">18K金手錶（高級品牌），表盤簡約但昂貴。金質手鐲點綴于腕部，彰顯身份。頸部有精緻的金色項鍊，款式高雅。手指戴著高級戒指，指甲修剪齊整且涂有深色指甲油，雙手白皙纖細無瑕疵。名牌包包搭配得完美。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">下半身</div>
+                            <div class="part-description">深灰或黑色西裝褲裙，版型剪裁精緻，臀部修身，腿部線條明顯。長度在膝蓋附近，高級感十足。高級皮質腰帶，款式簡約但昂貴，扣件閃耀著光澤。褲/裙的挺括感完全是專業護理的結果。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">腳部鞋履</div>
+                            <div class="part-description">深色高跟鞋（約7-8cm），名牌款式，光澤度高。踏步有節奏感，每一步都展現出她的自信和權力。鞋面光亮如鏡，顯示每天都有專人護理。步伐穩定而有力，彷彿踏實踩踏著每一次商業決策。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">姿態與氣場</div>
+                            <div class="part-description">站姿挺直，彷彿脊椎裡灌注著權力。走路時步伐穩定有力，從不拖沓。身體周圍彷彿有著一個無形的光環，令人不敢靠得太近。表情常年保持冷靜，偶爾綻放職業微笑，卻能瞬間凍結周圍氣氛。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 個性心理 -->
+            <div class="tab-content" id="sunLili-personality">
+                <div class="section">
+                    <h3>💭 個性特質與心理世界</h3>
+                    <div class="grid-section">
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">性格特質</div>
+                            <div class="traits-list">
+                                <span class="trait-tag">果決</span>
+                                <span class="trait-tag">幹練</span>
+                                <span class="trait-tag">自信</span>
+                                <span class="trait-tag">領導力強</span>
+                                <span class="trait-tag">理性</span>
+                                <span class="trait-tag">冷靜</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">優點</div>
+                            <div class="grid-item-content">
+                                • 管理能力超群<br>
+                                • 決策迅速精準<br>
+                                • 眼光獨到<br>
+                                • 魄力十足<br>
+                                • 親和力有限但專業
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">缺點</div>
+                            <div class="grid-item-content">
+                                • 有時過於冷酷<br>
+                                • 工作至上<br>
+                                • 對下屬要求嚴格<br>
+                                • 生活平衡差<br>
+                                • 難以信任他人
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">內心世界</div>
+                            <div class="grid-item-content">
+                                孫莉莉表面上完美得無懈可擊，但這完美背後隱藏著巨大的壓力。她時刻擔心失控、擔心失敗、擔心被發現自己其實並不完美。為了維持這份完美，她願意犧牲私生活、犧牲感情、甚至犧牲人性。<br><br>
+                                她用冷酷來保護自己，拒絕任何軟弱的表現。但在深夜獨自一人時，她也會問自己：「這樣的成功真的值得嗎？」她秘密地渴望找到可以信任和依靠的人，卻不知道如何信任。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日常生活 -->
+            <div class="tab-content" id="sunLili-lifestyle">
+                <div class="section">
+                    <h3>🕐 日常作息與習慣</h3>
+                    <div class="grid-section">
+                        <div class="grid-item">
+                            <div class="grid-item-label">早晨</div>
+                            <div class="grid-item-content">
+                                5:30 起床<br>
+                                5:35 運動30分鐘<br>
+                                6:10 淋浴更衣<br>
+                                6:30 早餐時查看新聞
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">工作時段</div>
+                            <div class="grid-item-content">
+                                7:30 出門<br>
+                                8:00-12:00 高層會議<br>
+                                12:00-13:00 工作午餐<br>
+                                13:00-18:00 視察決策
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">晚間</div>
+                            <div class="grid-item-content">
+                                18:30-21:00 應酬或加班<br>
+                                21:30 回家<br>
+                                22:00 泡澡放鬆<br>
+                                23:00 入睡
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">周末</div>
+                            <div class="grid-item-content">
+                                周六 商業論壇<br>
+                                周日 準備周計劃<br>
+                                很少 完全休息<br>
+                                從不 度假
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">日常習慣</div>
+                            <div class="grid-item-content">
+                                • 每天晨起運動30分鐘，風雨無阻<br>
+                                • 早餐前查看全球股市和新聞<br>
+                                • 辦公室內簡潔無雜物，每件東西都有其位置<br>
+                                • 會議時記筆記，用詞精確<br>
+                                • 說話簡潔高效，不喜歡拖沓
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">興趣愛好</div>
+                            <div class="grid-item-content">
+                                • 閱讀商業書籍，瑜伽健身<br>
+                                • 古典音樂鑑賞，高級紅酒收藏<br>
+                                • 獨居高檔公寓，生活規律如鐘表<br>
+                                • 很少有個人時間，也不知道如何享受
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= 淑麗詳細描寫 ============= -->
+        <div class="character-detail" id="shuLi-detail">
+            <div class="detail-header">
+                <div class="character-visual">
+                    <span class="character-emoji">👩</span>
+                    <div class="character-name">淑麗</div>
+                    <div class="character-role">銷售部資深銷售冠軍</div>
+                    <div class="basic-info">
+                        <div class="info-item">
+                            <div class="info-label">性別</div>
+                            <div class="info-value">女性</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">年齡</div>
+                            <div class="info-value">25歲</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">身高</div>
+                            <div class="info-value">168cm</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">體重</div>
+                            <div class="info-value">55kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="character-info">
+                    <div class="character-bio">
+                        <strong>📝 人物簡介</strong><br><br>
+                        淑麗是銷售部的冠軍，因為優異的銷售成績而在公司迅速躍升。她懂得利用自己的優勢——年輕、美貌和高超的談判技巧。但美麗外表下隱藏著高傲與功利的內心。<br><br>
+                        她把同事分為「有用」和「無用」兩類，對陳風的支配不僅是工作上的，也帶著某種心理優越感。她會為了達到目標而不擇手段，對自己的未來只有一個目標：向上爬。
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('shuLi', 'appearance')">👔 全身外觀</div>
+                <div class="tab" onclick="switchTab('shuLi', 'personality')">💭 個性心理</div>
+                <div class="tab" onclick="switchTab('shuLi', 'lifestyle')">🕐 日常生活</div>
+            </div>
+
+            <!-- 外觀描寫 -->
+            <div class="tab-content active" id="shuLi-appearance">
+                <div class="section">
+                    <h3>👔 全身外觀詳寫</h3>
+                    <div class="fullbody-description">
+                        <div class="fullbody-part">
+                            <div class="part-label">整體氣質</div>
+                            <div class="part-description">姣好身材，曲線明顯，膚色白皙經常保養。眼神充滿精計和魅力，嘴角帶著狡黠的笑意。整個人散發出熟女風範，既專業又性感，充分利用自己的優勢來吸引注意和控制局面。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">頭部髮型</div>
+                            <div class="part-description">烏黑長髮，長度及腰部，常披肩或做成微捲，蓬鬆感十足。髮色烏黑亮麗，經常有髮質護理。習慣性地翻動頭髮，這是她吸引注意力的習慣動作。髮香濃郁，會在她經過時留下痕跡。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">臉部妝容</div>
+                            <div class="part-description">濃妝豔抹的專業化妝，口紅鮮豔（紅色或棗紅色），眼影色彩搭配得體，睫毛捲翹。五官精緻，唇形性感。眼角帶著挑逗感，彷彿在向世界展示「看我有多迷人」。整個妝容的目的很明確——吸引和掌控。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">上身服飾</div>
+                            <div class="part-description">時尚連身裙或緊身上衣，材質多為絲綢或棉質，顏色鮮豔（紅、藍、紫等），裁剪彰顯身材。如果是連身裙，長度在膝蓋上方，修身剪裁，展現腿部線條。如果是上衣，則通常搭配牛仔褲或短褲。每一件衣服都是經過精心挑選，用來展現自己的優勢。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">配飾品味</div>
+                            <div class="part-description">精緻耳環（多為珍珠或水鑽款），手鐲，名牌包包。身上經常帶著香水，香氣濃郁而致命。裝飾腰帶突出腰部線條。每件配飾都精心挑選，用來提升整體質感和吸引力。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">雙手雙足</div>
+                            <div class="part-description">指甲修長且涂有鮮豔指甲油（常為紅色或粉紅色）。皮膚光滑無瑕，無任何勞動痕跡。高跟鞋或精緻平底鞋，品牌款式，顏色與服裝搭配。走路時步態嫵媚而自信。雙腿修長，經常做出吸引注意的姿態。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">姿態與氣場</div>
+                            <div class="part-description">站姿挺胸，有意強調胸部線條。走路時步態嫵媚而自信，經常翻動頭髮，有意製造存在感。坐時膝蓋併攏但身體略微傾向對方，製造親密感。每個動作都經過深思熟慮，目的是吸引和掌控。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 個性心理 -->
+            <div class="tab-content" id="shuLi-personality">
+                <div class="section">
+                    <h3>💭 個性特質與心理世界</h3>
+                    <div class="grid-section">
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">性格特質</div>
+                            <div class="traits-list">
+                                <span class="trait-tag">高傲</span>
+                                <span class="trait-tag">野心勃勃</span>
+                                <span class="trait-tag">外向</span>
+                                <span class="trait-tag">聰慧</span>
+                                <span class="trait-tag">現實主義</span>
+                                <span class="trait-tag">虛榮心強</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">優點</div>
+                            <div class="grid-item-content">
+                                • 銷售能力一流<br>
+                                • 社交手腕高明<br>
+                                • 目標導向明確<br>
+                                • 說話得體有說服力<br>
+                                • 察言觀色能力強
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">缺點</div>
+                            <div class="grid-item-content">
+                                • 傲慢、看不起他人<br>
+                                • 功利心重<br>
+                                • 缺乏同情心<br>
+                                • 把下屬當工具<br>
+                                • 膚淺、容易翻臉
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">內心世界</div>
+                            <div class="grid-item-content">
+                                淑麗的內心被物質慾望所驅動。她出身中產，父母教導她「錢能解決一切」。現在她活著就是為了賺錢、買名牌、找到富裕的伴侶。她把陳風這樣的人視為踏腳石，因為他弱，所以可以被利用。<br><br>
+                                她內心深處其實知道自己缺乏真正的能力，只有美貌，但她不願承認。她對老去充滿恐懼，害怕失去吸引力的那一天。她也秘密地渴望被尊重而不只是被欣賞，但她自己都不知道該如何改變。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日常生活 -->
+            <div class="tab-content" id="shuLi-lifestyle">
+                <div class="section">
+                    <h3>🕐 日常作息與習慣</h3>
+                    <div class="grid-section">
+                        <div class="grid-item">
+                            <div class="grid-item-label">早晨</div>
+                            <div class="grid-item-content">
+                                7:00 起床<br>
+                                7:00-7:30 化妝打扮<br>
+                                7:45 早餐<br>
+                                8:00 出門
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">工作時段</div>
+                            <div class="grid-item-content">
+                                8:30-12:00 客戶訪問<br>
+                                12:00-13:30 午餐社交<br>
+                                13:30-18:00 會議簽約
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">晚間</div>
+                            <div class="grid-item-content">
+                                18:00-20:00 健身或美容<br>
+                                20:00-23:00 應酬或逛街<br>
+                                23:30 入睡
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">周末</div>
+                            <div class="grid-item-content">
+                                周六 購物和美容<br>
+                                周日 高級聚會或約會<br>
+                                從不 獨自待在家裡<br>
+                                經常 尋找新的獵物
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">日常習慣</div>
+                            <div class="grid-item-content">
+                                • 頻繁整理頭髮和妝容<br>
+                                • 喜歡在會議中吸引注意力<br>
+                                • 經常外出應酬，建立人脈<br>
+                                • 購物和消費名牌，維持生活水平<br>
+                                • 在別人面前炫耀，尋求優越感
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">興趣愛好</div>
+                            <div class="grid-item-content">
+                                • 逛街購物，追求名牌<br>
+                                • 美容護膚，維持外表<br>
+                                • 參加高級聚會，拓展人脈<br>
+                                • 八卦同事私生活，找尋談資<br>
+                                • 獨居租住高級公寓，日常花銷大
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============= 阿蓮詳細描寫 ============= -->
+        <div class="character-detail" id="aLian-detail">
+            <div class="detail-header">
+                <div class="character-visual">
+                    <span class="character-emoji">👩‍🦰</span>
+                    <div class="character-name">阿蓮</div>
+                    <div class="character-role">孫氏集團底層員工</div>
+                    <div class="basic-info">
+                        <div class="info-item">
+                            <div class="info-label">性別</div>
+                            <div class="info-value">女性</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">年齡</div>
+                            <div class="info-value">21歲</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">身高</div>
+                            <div class="info-value">162cm</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">體重</div>
+                            <div class="info-value">48kg</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="character-info">
+                    <div class="character-bio">
+                        <strong>📝 人物簡介</strong><br><br>
+                        阿蓮是陳風最信任的人。21歲出頭，入職孫氏集團已有兩年。出身低收入家庭，父親早逝，母親獨力撫養她。因為年齡和單純的性格，在公司中有時會被忽視或欺負。<br><br>
+                        但她始終保持善良的心態，不會因為被傷害就變壞。與陳風相伴相助，彼此在職場困難中互相支持。她是陳風黑暗中的一盞燈，代表著純真與善良的力量......
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('aLian', 'appearance')">👔 全身外觀</div>
+                <div class="tab" onclick="switchTab('aLian', 'personality')">💭 個性心理</div>
+                <div class="tab" onclick="switchTab('aLian', 'lifestyle')">🕐 日常生活</div>
+            </div>
+
+            <!-- 外觀描寫 -->
+            <div class="tab-content active" id="aLian-appearance">
+                <div class="section">
+                    <h3>👔 全身外觀詳寫</h3>
+                    <div class="fullbody-description">
+                        <div class="fullbody-part">
+                            <div class="part-label">整體氣質</div>
+                            <div class="part-description">纖細嬌小的身材，有點瘦弱，膚色白皙但因常加班有些黑眼圈。眼神清澈溫暖，帶著淡淡的疲憊。嘴角容易上揚，親切溫暖，但有時會顯得有點委屈。整體呈現出年輕、清純、有點狼狽的上班族新手形象，充滿青春但也充滿疲憊。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">頭部髮型</div>
+                            <div class="part-description">黑色長髮，常綁成馬尾或丸子頭，整潔簡樸。髮質柔順但略有毛躁，髮尾略有分叉，顯示她的生活並不富裕。髮夾通常是廉價款，但整理得很乾淨。偶爾會有頭髮散亂，因為工作繁忙顧不上。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">臉部妝容</div>
+                            <div class="part-description">淡妝或素顏，最多只用BB霜和淡色唇膏，強調自然而不是修飾。五官秀氣，臉型圓潤，鼻子小巧。眼睛清澈但有疲憊感，黑眼圈是她經常加班的證明。嘴角容易上揚，形成自然的微笑。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">上身服飾</div>
+                            <div class="part-description">簡單的上班T恤或襯衫，多為白色、淺藍或淺粉紅，款式寬鬆舒適。衣服上經常有輕微的皺褶和污漬，顯示她的工作繁忙，缺乏精心打理。衣服的質量一般，看得出是廉價的日用服飾。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">下身服飾</div>
+                            <div class="part-description">短裙或短褲，長度在膝蓋上方，顏色多為牛仔藍或卡其色，材質舒適。褲/裙子上經常有洗舊的痕跡，顯示已經穿了很久。裙子或褲子的狀態略顯邋遢，但很乾淨，只是不精緻。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">鞋履與配飾</div>
+                            <div class="part-description">平底運動鞋或舒適平底鞋，顏色簡樸（白、黑、灰），明顯穿過很多次，鞋底有磨損。簡單的髮夾或皮筋，無名牌配飾，偶爾戴著一個廉價的串珠手環（可能是母親送的）。指甲修剪短促，無指甲油，手指常有筆痕或污漬，顯示工作繁忙。</div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">外套與配飾</div>
+                            <div class="part-description">輕薄開衫或廉價外套，作為冬季保暖，顏色單調。外套質量一般，但很乾淨。袋裡常放著充滿皺褶的便利店紙巾和廉價唇膏。</div>
+                        </div>
+
+                        <div class="fullbody-part">
+                            <div class="part-label">姿態與氣場</div>
+                            <div class="part-description">站姿有點駝背，因為缺乏自信，雙肩略微內收。走路時步伐快速但小心翼翼，彷彿生怕踩中什麼。經常低著頭，看起來有些自我貶低。但當和陳風在一起時，肩膀會放鬆一些，嘴角也會綻放出真誠的微笑。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 個性心理 -->
+            <div class="tab-content" id="aLian-personality">
+                <div class="section">
+                    <h3>💭 個性特質與心理世界</h3>
+                    <div class="grid-section">
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">性格特質</div>
+                            <div class="traits-list">
+                                <span class="trait-tag">善良</span>
+                                <span class="trait-tag">樂觀</span>
+                                <span class="trait-tag">平易近人</span>
+                                <span class="trait-tag">體貼</span>
+                                <span class="trait-tag">正直</span>
+                                <span class="trait-tag">容易信任</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">優點</div>
+                            <div class="grid-item-content">
+                                • 真誠、可靠<br>
+                                • 擅長傾聽<br>
+                                • 同情心強<br>
+                                • 樂於幫助他人<br>
+                                • 工作認真負責
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">缺點</div>
+                            <div class="grid-item-content">
+                                • 有點天真<br>
+                                • 容易被欺負<br>
+                                • 說話直率不圓滑<br>
+                                • 自信心不足<br>
+                                • 無法說不、容易被利用
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">內心世界</div>
+                            <div class="grid-item-content">
+                                阿蓮內心充滿了對生活的渴望，但她已經學會了放低期望。她會為了母親而努力工作，即使生活困難。她容易信任他人，有時會被人利用，但她不會因此變得冷酷。<br><br>
+                                她的夢想很簡單——希望有穩定的工作、照顧好母親、被人看見。陳風是她最信任的人，因為他也是被社會邊緣化的。她秘密地渴望被看見、被接納，希望自己能變得更強大。她對未來既充滿希望又充滿恐懼。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日常生活 -->
+            <div class="tab-content" id="aLian-lifestyle">
+                <div class="section">
+                    <h3>🕐 日常作息與習慣</h3>
+                    <div class="grid-section">
+                        <div class="grid-item">
+                            <div class="grid-item-label">早晨</div>
+                            <div class="grid-item-content">
+                                6:00 起床<br>
+                                6:00-6:15 盥洗<br>
+                                6:30 簡單早餐（便利店便當）<br>
+                                6:50 出門上班
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">工作時段</div>
+                            <div class="grid-item-content">
+                                7:30 抵達公司<br>
+                                7:30-12:00 上午工作<br>
+                                12:00-13:00 午餐（和陳風）<br>
+                                13:00-18:00 下午工作
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">晚間</div>
+                            <div class="grid-item-content">
+                                18:30 回家<br>
+                                18:40 簡單晚餐<br>
+                                19:00-21:00 看電視或畫畫<br>
+                                21:30 入睡
+                            </div>
+                        </div>
+
+                        <div class="grid-item">
+                            <div class="grid-item-label">周末</div>
+                            <div class="grid-item-content">
+                                周六 偶爾加班<br>
+                                周日 在家休息<br>
+                                或許 陪母親<br>
+                                常常 幫同事做事
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">日常習慣</div>
+                            <div class="grid-item-content">
+                                • 喜歡記筆記，整理得很清楚<br>
+                                • 常常咬嘴唇（緊張時的習慣）<br>
+                                • 走路會哼歌，藉此消解壓力<br>
+                                • 喜歡在空閒時幫同事，討好他人<br>
+                                • 常見她在努力微笑，隱藏內心的委屈
+                            </div>
+                        </div>
+
+                        <div class="grid-item full-width">
+                            <div class="grid-item-label">興趣愛好</div>
+                            <div class="grid-item-content">
+                                • 畫畫（業餘愛好，但無時間培養）<br>
+                                • 寫日記，記錄每天的感受<br>
+                                • 看青春電視劇，逃避現實<br>
+                                • 逛便利店，享受小小的快樂<br>
+                                • 租住廉價公寓，每月工資基本花完，但樂觀面對
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="characters.js"></script>
+    <script>
+        function showCharacter(characterKey) {
+            // 隱藏所有角色詳細視圖
+            document.querySelectorAll('.character-detail').forEach(detail => {
+                detail.classList.remove('active');
+            });
+            
+            // 顯示選中角色
+            document.getElementById(characterKey + '-detail').classList.add('active');
+            
+            // 更新導航按鈕
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchTab(characterKey, tabName) {
+            // 隱藏所有標籤內容
+            document.querySelectorAll(`#${characterKey}-detail .tab-content`).forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有標籤按鈕的active類
+            document.querySelectorAll(`#${characterKey}-detail .tab`).forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 顯示選中的標籤
+            document.getElementById(`${characterKey}-${tabName}`).classList.add('active');
+            
+            // 激活對應的標籤按鈕
+            event.target.classList.add('active');
+        }
+
+        // 頁面加載時
+        window.addEventListener('DOMContentLoaded', () => {
+            showCharacter('chenFeng');
+        });
+    </script>
+</body>
+</html>

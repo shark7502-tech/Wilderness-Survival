@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孫氏集團職場冒險遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ============= 主菜單 ============= */
+        .main-menu {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .menu-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .menu-title h1 {
+            font-size: 56px;
+            color: #d4af37;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            margin-bottom: 15px;
+        }
+
+        .menu-title p {
+            font-size: 18px;
+            color: #aaa;
+            margin: 5px 0;
+        }
+
+        .menu-subtitle {
+            color: #d4af37;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .menu-btn {
+            padding: 20px 40px;
+            border: 3px solid #d4af37;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #d4af37;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .menu-btn.primary {
+            background: linear-gradient(135deg, #d4af37 0%, #c9a227 100%);
+            color: #000;
+            font-size: 18px;
+            padding: 25px 50px;
+        }
+
+        .menu-btn.primary:hover {
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.8);
+        }
+
+        /* ============= 遊戲容器 ============= */
+        .game-container {
+            display: none;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        .character-container {
+            display: none;
+        }
+
+        .character-container.active {
+            display: block;
+        }
+
+        /* ============= 返回菜單按鈕 ============= */
+        .return-menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            border: 2px solid #d4af37;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #d4af37;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .return-menu-btn:hover {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .return-menu-btn.hidden {
+            display: none;
+        }
+
+        /* ============= 加載屏幕 ============= */
+        .loading-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .loading-title {
+            font-size: 48px;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(212, 175, 55, 0.3);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .version-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #aaa;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 1px solid #d4af37;
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回菜單按鈕 -->
+    <button class="return-menu-btn hidden" id="returnMenuBtn" onclick="returnToMenu()">
+        ← 返回菜單
+    </button>
+
+    <!-- 主菜單 -->
+    <div class="main-menu" id="mainMenu">
+        <div class="menu-title">
+            <h1>🏢 孫氏集團</h1>
+            <p>職場冒險遊戲</p>
+            <p class="menu-subtitle">瞭解角色 | 探索職場 | 改寫人生</p>
+        </div>
+
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="startCharacterMode()">
+                👥 角色介紹<br>
+                <span style="font-size: 12px;">瞭解每位角色的故事</span>
+            </button>
+            <button class="menu-btn primary" onclick="startGame()">
+                🎮 開始遊戲<br>
+                <span style="font-size: 12px;">進入職場冒險</span>
+            </button>
+            <button class="menu-btn" onclick="startGallery()">
+                🎨 圖庫資源<br>
+                <span style="font-size: 12px;">角色與場景圖片</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 角色卡系統 -->
+    <div class="character-container" id="characterContainer">
+        <iframe id="characterFrame" style="width: 100%; height: 100vh; border: none;" src="character_details.html"></iframe>
+    </div>
+
+    <!-- 遊戲容器 -->
+    <div class="game-container" id="gameContainer">
+        <!-- 遊戲内容會通過 AJAX 或 iframe 加載 -->
+        <iframe id="gameFrame" style="width: 100%; height: 100vh; border: none;" src="medieval_rpg.html"></iframe>
+    </div>
+
+    <!-- 圖庫容器 -->
+    <div class="game-container" id="galleryContainer">
+        <iframe id="galleryFrame" style="width: 100%; height: 100vh; border: none;" src="gallery.html"></iframe>
+    </div>
+
+    <!-- 版本信息 -->
+    <div class="version-info" id="versionInfo">
+        v1.0 - 孫氏集團職場冒險<br>
+        Integrated Edition
+    </div>
+
+    <script>
+        function startGame() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameContainer').classList.add('active');
+            document.getElementById('returnMenuBtn').classList.remove('hidden');
+            document.getElementById('versionInfo').style.display = 'none';
+        }
+
+        function startCharacterMode() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('characterContainer').classList.add('active');
+            document.getElementById('returnMenuBtn').classList.remove('hidden');
+            document.getElementById('versionInfo').style.display = 'none';
+        }
+
+        function startGallery() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('galleryContainer').classList.add('active');
+            document.getElementById('returnMenuBtn').classList.remove('hidden');
+            document.getElementById('versionInfo').style.display = 'none';
+        }
+
+        function returnToMenu() {
+            // 隱藏所有容器
+            document.getElementById('gameContainer').classList.remove('active');
+            document.getElementById('characterContainer').classList.remove('active');
+            document.getElementById('galleryContainer').classList.remove('active');
+            
+            // 顯示主菜單
+            document.getElementById('mainMenu').style.display = 'flex';
+            document.getElementById('returnMenuBtn').classList.add('hidden');
+            document.getElementById('versionInfo').style.display = 'block';
+            
+            // 刷新框架
+            document.getElementById('gameFrame').src = 'medieval_rpg.html';
+            document.getElementById('characterFrame').src = 'character_details.html';
+            document.getElementById('galleryFrame').src = 'gallery.html';
+        }
+
+        // 鍵盤快捷鍵：按 ESC 返回菜單
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const btn = document.getElementById('returnMenuBtn');
+                if (!btn.classList.contains('hidden')) {
+                    returnToMenu();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

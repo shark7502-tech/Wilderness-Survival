@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物車系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            color: #667eea;
+            font-size: 24px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .credit-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .cart-icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        /* === 購物車頁面 === */
+        .cart-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .cart-items {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .cart-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 80px 1fr 100px 100px 50px;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .item-details h3 {
+            margin-bottom: 5px;
+            color: #667eea;
+        }
+
+        .item-price {
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .item-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .qty-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .qty-btn:hover {
+            background: #764ba2;
+        }
+
+        .qty-display {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .remove-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .remove-btn:hover {
+            background: #ee5a52;
+        }
+
+        .cart-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .summary-item.total {
+            border-bottom: 2px solid #667eea;
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+            margin-top: 15px;
+        }
+
+        .coupon-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .coupon-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .coupon-input::placeholder {
+            color: #999;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #dee2e6;
+            color: #333;
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: #c9cfdb;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .btn-success {
+            background: #51cf66;
+        }
+
+        .btn-success:hover {
+            background: #40c057;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+        }
+
+        .btn-danger:hover {
+            background: #ee5a52;
+        }
+
+        .btn-warning {
+            background: #ffa94d;
+        }
+
+        .btn-warning:hover {
+            background: #ff8c42;
+        }
+
+        /* === 商品詳情頁面 === */
+        .product-detail {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            padding: 30px;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+
+        .product-info h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .product-price {
+            font-size: 24px;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .product-desc {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quantity-selector label {
+            font-weight: bold;
+        }
+
+        .quantity-selector input {
+            width: 80px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .available-coupons {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .available-coupons h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .coupon-tag {
+            display: inline-block;
+            background: #e7f5ff;
+            color: #667eea;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .coupon-tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .coupon-tag.applied {
+            background: #51cf66;
+            color: white;
+        }
+
+        /* === 商品列表頁面 === */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-card-image {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+        }
+
+        .product-card-body {
+            padding: 15px;
+        }
+
+        .product-card-name {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 8px;
+            min-height: 35px;
+            line-height: 1.2;
+        }
+
+        .product-card-price {
+            font-size: 18px;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-card-footer {
+            display: flex;
+            gap: 8px;
+        }
+
+        .product-card-footer .btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .product-card-footer .btn-success {
+            background: #51cf66;
+        }
+
+        .product-card-footer .btn-success:hover {
+            background: #40c057;
+        }
+
+        .product-card-footer .btn-warning {
+            background: #ffa94d;
+        }
+
+        .product-card-footer .btn-warning:hover {
+            background: #ff8c42;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* === 配送頁面 === */
+        .shipping-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .shipping-method,
+        .shipping-address {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .shipping-method h3,
+        .shipping-address h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .method-option,
+        .address-option {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .method-option:hover,
+        .address-option:hover {
+            border-color: #667eea;
+        }
+
+        .method-option.selected,
+        .address-option.selected {
+            border-color: #667eea;
+            background: #e7f5ff;
+        }
+
+        .method-option input[type="radio"],
+        .address-option input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .method-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .method-price {
+            color: #ff6b6b;
+            font-weight: bold;
+            float: right;
+        }
+
+        .method-desc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            clear: both;
+        }
+
+        /* === 付款頁面 === */
+        .payment-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .payment-methods,
+        .payment-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .payment-methods h3,
+        .payment-summary h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .payment-option {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-option:hover {
+            border-color: #667eea;
+        }
+
+        .payment-option.selected {
+            border-color: #667eea;
+            background: #e7f5ff;
+        }
+
+        .payment-option input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .payment-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .payment-form {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .payment-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .summary-line.total {
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            margin-top: 10px;
+        }
+
+        .summary-label {
+            color: #666;
+        }
+
+        .summary-value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        /* === 訂單確認頁面 === */
+        .confirmation-section {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .confirmation-message {
+            font-size: 20px;
+            color: #51cf66;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .order-id {
+            font-size: 18px;
+            color: #667eea;
+            margin-bottom: 30px;
+            background: #e7f5ff;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .order-details h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .detail-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* === 訂單進度 === */
+        .progress-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .progress-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 0;
+        }
+
+        .progress-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            color: #999;
+        }
+
+        .step-circle.completed {
+            background: #51cf66;
+            border-color: #51cf66;
+            color: white;
+        }
+
+        .step-circle.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .step-label.completed {
+            color: #51cf66;
+        }
+
+        .step-label.active {
+            color: #667eea;
+        }
+
+        .step-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* === 響應式設計 === */
+        @media (max-width: 768px) {
+            .cart-container {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-item {
+                grid-template-columns: 60px 1fr;
+            }
+
+            .item-controls,
+            .cart-item > div:nth-child(3),
+            .cart-item > div:nth-child(4) {
+                display: none;
+            }
+
+            .product-detail {
+                grid-template-columns: 1fr;
+            }
+
+            .shipping-section,
+            .payment-section {
+                grid-template-columns: 1fr;
+            }
+
+            .progress-timeline {
+                flex-direction: column;
+            }
+
+            .progress-timeline::before {
+                display: none;
+            }
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-cart-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            color: #856404;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 6px;
+            padding: 15px;
+            color: #155724;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題 -->
+        <header>
+            <h1>🛒 購物車系統</h1>
+            <div class="header-right">
+                <div class="credit-badge">信用點：<span id="creditPoints">100</span></div>
+                <span class="cart-icon" onclick="goToCart()">🛍️ 購物車(<span id="cartCount">0</span>)</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- === 商品列表頁面 === -->
+            <section id="productsListPage" class="active">
+                <h2>3C商品列表</h2>
+                <div class="category-filter">
+                    <button class="filter-btn active" onclick="filterProducts('all')">全部</button>
+                    <button class="filter-btn" onclick="filterProducts('headphone')">耳機/音響</button>
+                    <button class="filter-btn" onclick="filterProducts('charging')">充電/電源</button>
+                    <button class="filter-btn" onclick="filterProducts('camera')">相機/錄製</button>
+                    <button class="filter-btn" onclick="filterProducts('input')">鍵鼠</button>
+                    <button class="filter-btn" onclick="filterProducts('storage')">儲存</button>
+                    <button class="filter-btn" onclick="filterProducts('mobile')">手機配件</button>
+                    <button class="filter-btn" onclick="filterProducts('computer')">電腦</button>
+                </div>
+                <div class="products-grid" id="productsGrid"></div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="goToCart()" style="width: 200px;">查看購物車</button>
+                </div>
+            </section>
+
+            <!-- === 購物車頁面 === -->
+            <section id="cartPage">
+                <h2>購物車</h2>
+                <div class="cart-container">
+                    <div class="cart-items">
+                        <div id="cartItemsList"></div>
+                    </div>
+                    <div class="cart-summary">
+                        <div class="summary-item">
+                            <span>小計：</span>
+                            <span id="subtotal">NT$0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>優惠：</span>
+                            <span id="discount" style="color: #51cf66;">-NT$0</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>合計：</span>
+                            <span id="cartTotal">NT$0</span>
+                        </div>
+
+                        <div class="coupon-section">
+                            <label>商品優惠券：</label>
+                            <input type="text" id="productCoupon" class="coupon-input" placeholder="輸入商品優惠券碼">
+                            <button class="btn btn-primary btn-small" onclick="applyProductCoupon()">使用優惠券</button>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="goToShipping()">進行結帳</button>
+                        <button class="btn btn-secondary" onclick="continueShopping()">繼續購物</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === 商品詳情頁面 === -->
+            <section id="productDetailPage">
+                <div class="product-detail" id="productDetail"></div>
+            </section>
+
+            <!-- === 配送頁面 === -->
+            <section id="shippingPage">
+                <h2>選擇配送方式及地址</h2>
+                <div class="shipping-section">
+                    <div class="shipping-method">
+                        <h3>配送方式</h3>
+                        <div class="method-option selected" onclick="selectShipping('home', this)">
+                            <input type="radio" name="shippingMethod" value="home" checked>
+                            <div class="method-title">🚚 宅配到家</div>
+                            <div class="method-price">NT$80</div>
+                            <div class="method-desc">2-3個工作天送達</div>
+                        </div>
+                        <div class="method-option" onclick="selectShipping('cvs', this)">
+                            <input type="radio" name="shippingMethod" value="cvs">
+                            <div class="method-title">🏪 超商取貨</div>
+                            <div class="method-price">NT$60</div>
+                            <div class="method-desc">1-2個工作天</div>
+                        </div>
+                        <div class="method-option" onclick="selectShipping('pickup', this)">
+                            <input type="radio" name="shippingMethod" value="pickup">
+                            <div class="method-title">🏬 門市自取</div>
+                            <div class="method-price">免運費</div>
+                            <div class="method-desc">當天取貨</div>
+                        </div>
+                    </div>
+
+                    <div class="shipping-address">
+                        <h3>配送地址</h3>
+                        <div class="address-option selected" onclick="selectAddress('home', this)">
+                            <input type="radio" name="address" value="home" checked>
+                            <div class="method-title">📍 宅配地址</div>
+                            <div class="method-desc">台北市中山區</div>
+                        </div>
+                        <div class="address-option" onclick="selectAddress('cvs', this)">
+                            <input type="radio" name="address" value="cvs">
+                            <div class="method-title">🏪 全家超商 (中山門市)</div>
+                            <div class="method-desc">台北市中山區中山路</div>
+                        </div>
+                        <div class="address-option" onclick="selectAddress('office', this)">
+                            <input type="radio" name="address" value="office">
+                            <div class="method-title">🏢 公司地址</div>
+                            <div class="method-desc">台北市信義區</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coupon-section" style="margin-top: 30px;">
+                    <label>運費優惠券：</label>
+                    <input type="text" id="shippingCoupon" class="coupon-input" placeholder="輸入運費優惠券碼">
+                    <button class="btn btn-primary btn-small" onclick="applyShippingCoupon()">使用優惠券</button>
+                    <div id="shippingCouponInfo" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="goToPayment()" style="flex: 1;">進行付款</button>
+                    <button class="btn btn-secondary" onclick="goToCart()" style="flex: 1;">返回購物車</button>
+                </div>
+            </section>
+
+            <!-- === 付款頁面 === -->
+            <section id="paymentPage">
+                <h2>選擇付款方式</h2>
+                <div class="payment-section">
+                    <div class="payment-methods">
+                        <h3>付款方式</h3>
+                        
+                        <div class="payment-option selected" onclick="selectPayment('credit', this)">
+                            <input type="radio" name="payment" value="credit" checked>
+                            <div class="payment-title">💳 信用卡付款</div>
+                        </div>
+                        <div id="creditCardForm" class="payment-form active">
+                            <div class="form-group">
+                                <label>卡號</label>
+                                <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>有效期</label>
+                                    <input type="text" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVV</label>
+                                    <input type="text" placeholder="123" maxlength="3">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>持卡人姓名</label>
+                                <input type="text" placeholder="John Doe">
+                            </div>
+                        </div>
+
+                        <div class="payment-option" onclick="selectPayment('transfer', this)">
+                            <input type="radio" name="payment" value="transfer">
+                            <div class="payment-title">🏦 銀行轉帳</div>
+                        </div>
+                        <div id="transferForm" class="payment-form">
+                            <div class="form-group">
+                                <label>銀行名稱</label>
+                                <select>
+                                    <option>台灣銀行</option>
+                                    <option>國泰銀行</option>
+                                    <option>玉山銀行</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>帳號</label>
+                                <input type="text" placeholder="請輸入帳號">
+                            </div>
+                            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; font-size: 12px; color: #856404;">
+                                🔔 轉帳帳號：銀行001-123456789<br>
+                                戶名：本公司 限時 3 天內轉帳
+                            </div>
+                        </div>
+
+                        <div class="payment-option" onclick="selectPayment('cod', this)">
+                            <input type="radio" name="payment" value="cod">
+                            <div class="payment-title">📦 貨到付款</div>
+                        </div>
+
+                        <div class="payment-option" onclick="selectPayment('cvs', this)">
+                            <input type="radio" name="payment" value="cvs">
+                            <div class="payment-title">🏪 超商付款</div>
+                        </div>
+                        <div id="cvsForm" class="payment-form">
+                            <div class="form-group">
+                                <label>超商</label>
+                                <select>
+                                    <option>全家</option>
+                                    <option>7-11</option>
+                                    <option>萊爾富</option>
+                                    <option>OK便利店</option>
+                                </select>
+                            </div>
+                            <div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 10px; font-size: 12px; color: #155724;">
+                                ✓ 付款代碼將在訂單成立後傳送至您的郵件
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-summary">
+                        <h3>訂單摘要</h3>
+                        <div id="paymentSummary"></div>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="confirmOrder()">確認訂單</button>
+                            <button class="btn btn-secondary" onclick="goToShipping()">返回配送</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- === 訂單確認頁面 === -->
+            <section id="confirmationPage">
+                <div class="confirmation-section">
+                    <div class="confirmation-message">✅ 訂單已成立！</div>
+                    <div class="order-id">訂單編號：<span id="orderId"></span></div>
+
+                    <div class="progress-timeline">
+                        <div class="progress-step">
+                            <div class="step-circle completed">✓</div>
+                            <div class="step-label completed">訂單成立</div>
+                            <div class="step-time">已完成</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-circle active">⏳</div>
+                            <div class="step-label active">待付款確認</div>
+                            <div class="step-time" id="paymentTime">3天內</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-circle">📦</div>
+                            <div class="step-label">賣家確認</div>
+                            <div class="step-time">待收款</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-circle">🚚</div>
+                            <div class="step-label">準備出貨</div>
+                            <div class="step-time">待出貨</div>
+                        </div>
+                    </div>
+
+                    <div class="order-details">
+                        <h3>訂單詳情</h3>
+                        <div id="orderDetailsContent"></div>
+                    </div>
+
+                    <div class="warning">
+                        ⚠️ 重要提醒：請於 3 天內完成付款，逾期未付款將自動取消訂單並扣除信用點。
+                    </div>
+
+                    <button class="btn btn-primary" onclick="goToCart()">返回購物車</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 模態框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2 id="confirmTitle">確認</h2>
+            <p id="confirmMessage"></p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="confirmBtn" onclick="confirmAction()">確認</button>
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="shopping_cart.js"></script>
+</body>
+</html>

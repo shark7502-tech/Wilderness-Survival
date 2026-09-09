@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>遊戲回饋表單（範例 / 置換為 Google 表單）</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; background:#f6f7fb; padding:20px; }
+        .container { max-width:720px; margin:24px auto; background:#fff; border-radius:8px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.06);} 
+        h1 { font-size:20px; margin-bottom:8px; }
+        label { display:block; margin-top:12px; font-weight:600; }
+        input[type="text"], input[type="email"], textarea, select { width:100%; padding:10px; margin-top:6px; border-radius:6px; border:1px solid #ddd; }
+        .row { display:flex; gap:12px; }
+        .row > * { flex:1 }
+        .rating { display:flex; gap:8px; margin-top:8px; }
+        .btn { margin-top:14px; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; background:#4caf50; color:#fff; }
+        .note { margin-top:10px; color:#666; font-size:13px }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>遊戲回饋表單（範例）</h1>
+        <p class="note">這是一個本地範例表單。若要使用 Google 表單，請依照專案中的 <strong>GOOGLE_FORM_INSTRUCTIONS.md</strong> 建立表單並把表單的分享連結貼回遊戲中。</p>
+
+        <form id="feedbackForm" onsubmit="handleSubmit(event)">
+            <label for="name">姓名</label>
+            <input id="name" name="name" type="text" placeholder="請輸入姓名（選填）" />
+
+            <label for="email">Email / 聯絡方式</label>
+            <input id="email" name="email" type="email" placeholder="example@mail.com（選填）" />
+
+            <label for="contact">其他聯絡方式（例如 LINE / 電話）</label>
+            <input id="contact" name="contact" type="text" placeholder="選填" />
+
+            <label for="experience">遊玩體驗（簡述）</label>
+            <textarea id="experience" name="experience" rows="4" placeholder="請描述您的遊玩體驗（選填）"></textarea>
+
+            <label for="opinion">意見或建議</label>
+            <textarea id="opinion" name="opinion" rows="4" placeholder="寫下您希望告訴開發者的事情"></textarea>
+
+            <label>遊戲評分</label>
+            <div class="rating" role="radiogroup" aria-label="遊戲評分">
+                <label><input type="radio" name="rating" value="1" /> 1</label>
+                <label><input type="radio" name="rating" value="2" /> 2</label>
+                <label><input type="radio" name="rating" value="3" /> 3</label>
+                <label><input type="radio" name="rating" value="4" /> 4</label>
+                <label><input type="radio" name="rating" value="5" checked /> 5</label>
+            </div>
+
+            <button class="btn" type="submit">送出（範例）</button>
+        </form>
+
+        <p class="note">提示：此頁為範例，可直接替換為您在 Google 表單建立後的分享連結。若要在遊戲中把按鈕改為開啟 Google 表單，請把遊戲中 `calculator.html` 的浮動按鈕 href 改為 Google 表單的分享連結（或短網址）。</p>
+    </div>
+
+    <script>
+        function handleSubmit(e){
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(document.getElementById('feedbackForm')).entries());
+            // 本地範例行為：顯示資料並提示使用者如何改為 Google 表單
+            alert('已收到（本地範例）\n\n' + JSON.stringify(data, null, 2) + '\n\n請依照項目在 Google 表單建立對應欄位以收集實際回饋。');
+            document.getElementById('feedbackForm').reset();
+        }
+    </script>
+</body>
+</html>

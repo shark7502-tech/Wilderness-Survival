@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin 控制台 - 遊戲後台（範例）</title>
+  <style>
+    body{font-family: Arial, Helvetica, sans-serif; padding:18px; background:#f4f6fb}
+    .wrap{max-width:1100px;margin:0 auto}
+    h1{margin-bottom:8px}
+    .cols{display:flex;gap:12px}
+    .panel{background:#fff;padding:12px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    .left{flex:0 0 320px}
+    .right{flex:1}
+    ul.player-list{list-style:none;padding:0;margin:0}
+    ul.player-list li{padding:8px;border-bottom:1px solid #eee;cursor:pointer}
+    ul.player-list li:hover{background:#f6f8ff}
+    .btn{display:inline-block;padding:8px 10px;border-radius:6px;background:#1976d2;color:#fff;text-decoration:none}
+    label{display:block;margin-top:8px;font-weight:600}
+    input,textarea,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ddd}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Admin 控制台（範例）</h1>
+    <p>此頁面為後台範例。請在專案根目錄啟動後端（server），然後重新整理此頁面以載入即時資料。</p>
+
+    <div class="cols">
+      <div class="panel left">
+        <h3>玩家列表</h3>
+        <div style="margin-bottom:8px"><button id="refreshBtn" class="btn">重新整理</button></div>
+        <ul id="players" class="player-list"></ul>
+      </div>
+
+      <div class="panel right">
+        <h3>玩家詳情</h3>
+        <div id="detail">請選擇左方玩家</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const apiBase = '';
+    const socket = io();
+
+    function loadPlayers(){
+      fetch(apiBase + '/api/players').then(r=>r.json()).then(list => {
+        const ul = document.getElementById('players'); ul.innerHTML = '';
+        list.forEach(p => {
+          const li = document.createElement('li');
+          li.textContent = p.id + ' — ' + (p.name || '') + (p.socketId? ' (online)':' (offline)');
+          li.onclick = ()=> showDetail(p.id);
+          ul.appendChild(li);
+        });
+      }).catch(err => { console.error(err); alert('無法存取 /api/players，請確認後端是否已啟動'); });
+    }
+
+    function showDetail(id){
+      fetch('/api/players/' + encodeURIComponent(id)).then(r=>r.json()).then(p=>{
+        const d = document.getElementById('detail');
+        d.innerHTML = '';
+        const html = [];
+        html.push('<div><strong>ID:</strong> ' + p.id + '</div>');
+        html.push('<div><strong>名稱:</strong> ' + (p.name||'') + '</div>');
+        html.push('<div><strong>位置:</strong> ' + JSON.stringify(p.location) + '</div>');
+        html.push('<div><strong>進度:</strong> ' + JSON.stringify(p.progress) + '</div>');
+        html.push('<div><strong>道具:</strong> ' + JSON.stringify(p.items) + '</div>');
+        html.push('<div><strong>SocketID:</strong> ' + (p.socketId||'') + '</div>');
+        html.push('<hr/>');
+
+        html.push('<label>更新位置 (JSON):</label>');
+        html.push('<textarea id="upd_location" rows="2">' + JSON.stringify(p.location || {}) + '</textarea>');
+        html.push('<label>更新道具 (JSON array):</label>');
+        html.push('<textarea id="upd_items" rows="2">' + JSON.stringify(p.items || []) + '</textarea>');
+        html.push('<label>更新進度 (JSON):</label>');
+        html.push('<textarea id="upd_progress" rows="2">' + JSON.stringify(p.progress || {}) + '</textarea>');
+        html.push('<div style="margin-top:8px"><button class="btn" onclick="applyUpdate(\''+p.id+'\')">套用更新並熱推送</button></div>');
+
+        html.push('<hr/><label>傳送私人訊息給玩家</label>');
+        html.push('<textarea id="admin_msg" rows="2" placeholder="要傳的訊息..."></textarea>');
+        html.push('<div style="margin-top:8px"><button class="btn" onclick="sendAdminMessage(\''+p.id+'\')">傳送</button></div>');
+
+        d.innerHTML = html.join('');
+      });
+    }
+
+    function applyUpdate(id){
+      const loc = JSON.parse(document.getElementById('upd_location').value || '{}');
+      const items = JSON.parse(document.getElementById('upd_items').value || '[]');
+      const progress = JSON.parse(document.getElementById('upd_progress').value || '{}');
+      fetch('/api/players/' + encodeURIComponent(id), {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ location: loc, items: items, progress: progress })
+      }).then(r=>r.json()).then(res=>{ alert('已更新，並會推送到玩家（若在線）'); loadPlayers(); showDetail(id); }).catch(err=>{ console.error(err); alert('更新失敗'); });
+    }
+
+    function sendAdminMessage(id){
+      const text = document.getElementById('admin_msg').value || '';
+      socket.emit('admin:message', { toPlayerId: id, text });
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadPlayers);
+
+    // Socket events for live updates
+    socket.on('connect', ()=>{
+      console.log('socket connected (admin UI)');
+      socket.emit('register', { role: 'admin', name: 'Admin Console' });
+    });
+    socket.on('admin:playerUpdate', (p) => { loadPlayers(); });
+    socket.on('admin:playerConnected', (p) => { loadPlayers(); });
+    socket.on('admin:playerDisconnected', (p) => { loadPlayers(); });
+
+    loadPlayers();
+  </script>
+</body>
+</html>
