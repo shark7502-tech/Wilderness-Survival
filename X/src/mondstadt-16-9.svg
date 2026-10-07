@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Mondstadt by Cider Lake</title>
+  <desc id="desc">An original 16:9 fantasy landscape illustration of a wind-swept walled city beside a lake, with a high cathedral, windmills, stone bridge, distant mountains and a lone traveler.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#76b5dc"/><stop offset=".54" stop-color="#b8d8dd"/><stop offset="1" stop-color="#f2d9a0"/></linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#70b9c6"/><stop offset="1" stop-color="#327b91"/></linearGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e9d9ad"/><stop offset="1" stop-color="#a99876"/></linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#647e86"/><stop offset="1" stop-color="#344c5d"/></linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a1b875"/><stop offset="1" stop-color="#4f7959"/></linearGradient>
+    <radialGradient id="sunGlow"><stop stop-color="#fff1bf" stop-opacity=".82"/><stop offset="1" stop-color="#fff1bf" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="22"/></filter>
+    <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feGaussianBlur in="SourceAlpha" stdDeviation="9"/><feOffset dy="9"/><feComponentTransfer><feFuncA type="linear" slope=".24"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <!-- Open sky and distant ridges -->
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1230" cy="160" r="220" fill="url(#sunGlow)"/>
+  <circle cx="1230" cy="160" r="66" fill="#fff0bf" opacity=".83"/>
+  <g fill="#f7f2df" opacity=".56">
+    <path d="M120 177q40-40 90-6 43-40 91 6-5 19-26 21H145q-23-3-25-21Z"/>
+    <path d="M420 116q31-29 70-4 33-30 69 5-4 15-20 17H439q-18-2-19-18Z"/>
+    <path d="M1040 278q36-34 79-5 36-32 76 7-4 17-23 18h-112q-19-2-20-20Z"/>
+    <path d="M1370 333q24-25 58-4 29-25 59 6-3 13-17 15h-85q-14-2-15-17Z"/>
+  </g>
+  <path d="M0 482 175 330 268 393 414 242 535 386 647 300 795 405 920 267 1066 402 1192 305 1360 414 1489 328 1600 382V600H0Z" fill="#7994a0" opacity=".78"/>
+  <path d="m175 330 93 63 146-151 121 144 112-86 148 105 125-138 146 135 126-97 168 109 129-86 111 54v83H0v-63Z" fill="#d6d4c0" opacity=".62"/>
+  <path d="M0 512q180-43 349-5t335-5q181-44 362 8t345-3q122-21 209 6v133H0Z" fill="#7d9b83"/>
+  <!-- Cider Lake -->
+  <path d="M0 547q205-18 416 4 224 24 420-2 244-31 438 9 185 38 326-2v344H0Z" fill="url(#lake)"/>
+  <g fill="none" stroke="#c6e1d3" opacity=".45" stroke-linecap="round">
+    <path d="M35 633q139-13 278 0m112 36q109-12 217 1m392-51q140-12 275 3m-102 83q104-11 211 0M189 802q103-10 210 0m523-49q130-12 258 1" stroke-width="5"/>
+    <path d="M73 679q71-7 144 0m795 93q76-8 151 0m-861-133q58-7 119 1" stroke-width="2"/>
+  </g>
+  <!-- Island city foundations and curtain wall -->
+  <ellipse cx="852" cy="604" rx="380" ry="56" fill="#284956" opacity=".25"/>
+  <path d="M492 563q34-71 110-80l90 7q42-68 104-71 70 2 105 65l97 1q81 13 109 78l-31 54q-113 43-289 37-197-5-326-42Z" fill="#796f5a"/>
+  <path d="M513 536q30-45 83-48l79 5 34-26 66 8 41-28 70 7 37 32 98 1q58 5 89 51l-12 39q-134 38-286 34-178-4-302-35Z" fill="url(#stone)" stroke="#776c59" stroke-width="5"/>
+  <!-- City blocks -->
+  <g filter="url(#shadow)">
+    <path d="M576 502V406l73-57 75 57v117Z" fill="#cfbb94" stroke="#8c795d" stroke-width="4"/>
+    <path d="m559 408 90-82 94 82Z" fill="url(#roof)" stroke="#344d5b" stroke-width="5"/>
+    <path d="M737 505V377l80-62 85 62v135Z" fill="#e0cda7" stroke="#958266" stroke-width="4"/>
+    <path d="m718 380 99-90 104 90Z" fill="#536e7a" stroke="#334c5d" stroke-width="5"/>
+    <path d="M912 512V409l73-54 74 54v111Z" fill="#d7c39e" stroke="#958266" stroke-width="4"/>
+    <path d="m895 411 90-81 92 81Z" fill="#405966" stroke="#334c5d" stroke-width="5"/>
+    <path d="M1059 522V441l54-42 59 42v92Z" fill="#dfcba5" stroke="#948064" stroke-width="4"/>
+    <path d="m1046 443 67-61 72 61Z" fill="#617783" stroke="#394f59" stroke-width="4"/>
+  </g>
+  <!-- Windows and warm lamps -->
+  <g fill="#52707a" stroke="#e7d5ad" stroke-width="4">
+    <path d="M611 434q0-19 15-19t15 19v23h-30Zm55 0q0-19 15-19t15 19v23h-30Z"/>
+    <path d="M774 403q0-21 17-21t17 21v29h-34Zm57 0q0-21 17-21t17 21v29h-34Z"/>
+    <path d="M946 432q0-18 15-18t15 18v25h-30Zm54 0q0-18 15-18t15 18v25h-30Z"/>
+  </g>
+  <g fill="#f2d58a"><rect x="635" y="476" width="13" height="21" rx="5"/><rect x="808" y="458" width="15" height="25" rx="6"/><rect x="974" y="478" width="13" height="19" rx="5"/><rect x="1090" y="484" width="11" height="17" rx="4"/></g>
+  <!-- Central cathedral, tall but integrated with the skyline -->
+  <g filter="url(#shadow)">
+    <path d="M804 349V186l34-45 35 45v163Zm-56 14V246l27-36 28 36v116Zm112 0V235l28-39 29 39v128Z" fill="#d8c8a7" stroke="#86785f" stroke-width="5"/>
+    <path d="M823 187 838 103l16 84Zm-43 61 23-67 23 67Zm111-12 26-72 25 72Z" fill="#455f6c" stroke="#314a58" stroke-width="5"/>
+    <path d="M821 349V276q17-35 35 0v73Zm-37 10V296q14-28 28 0v63Zm112 0V290q15-31 30 0v69Z" fill="#647e83" stroke="#e2d0aa" stroke-width="5"/>
+    <path d="M837 138v-34m-10 16h20m93 1v-31m-10 15h20" stroke="#f5e6c1" stroke-width="5"/>
+  </g>
+  <!-- Windmills on the city edge -->
+  <g stroke="#ecdfc0" stroke-width="8" stroke-linecap="round">
+    <path d="M529 481V361m0 0-43-39m43 39 39-49m-39 49-54 13m54-13 51 21"/>
+    <path d="M1155 482V342m0 0-43-39m43 39 43-48m-43 48-54 11m54-11 53 20"/>
+  </g>
+  <g fill="#a4563f"><circle cx="529" cy="361" r="10"/><circle cx="1155" cy="342" r="10"/></g>
+  <!-- Stone bridge leading toward the gate -->
+  <path d="M691 603q12-92 70-97 60-5 76 97m30 5q14-92 74-95 60-4 75 95" fill="none" stroke="#e1cfaa" stroke-width="21"/>
+  <path d="M673 600q190 39 366 2" fill="none" stroke="#84765d" stroke-width="10"/>
+  <path d="M701 594q25-22 50-1m143 1q25-22 50-1" fill="none" stroke="#294f61" stroke-width="17"/>
+  <!-- Foreground shore and flowers -->
+  <path d="M0 777q213-58 410 12 182 65 371 29 199-39 395 16 231 64 424 11v145H0Z" fill="url(#grass)"/>
+  <path d="M0 841q250-42 453 34t417 4q235-52 435 17t295 5v99H0Z" fill="#426449"/>
+  <g fill="#f5df9c">
+    <circle cx="110" cy="790" r="7"/><circle cx="160" cy="824" r="5"/><circle cx="385" cy="786" r="6"/><circle cx="454" cy="838" r="5"/><circle cx="1237" cy="795" r="7"/><circle cx="1325" cy="836" r="5"/><circle cx="1491" cy="795" r="6"/>
+  </g>
+  <!-- Lone traveler for scale -->
+  <g transform="translate(300 694)">
+    <ellipse cx="0" cy="123" rx="28" ry="8" fill="#254a4b" opacity=".35"/>
+    <path d="M-15 61q15-18 30 0l12 54h-54Z" fill="#344d65"/><circle cy="43" r="13" fill="#e9c79a"/><path d="M-17 39q17-33 35 0Z" fill="#6c4d36"/><path d="M-25 73h50" stroke="#c3a66f" stroke-width="7"/><path d="M-11 112l-9 19m29-19 8 19" stroke="#453a31" stroke-width="8"/>
+    <path d="M22 73 44 113" stroke="#695438" stroke-width="5"/><path d="M42 67v49m-11-36h22m-22 14h22" stroke="#e6d8b6" stroke-width="4"/>
+  </g>
+  <g fill="none" stroke="#f7f0d9" stroke-width="3" opacity=".68" stroke-linecap="round">
+    <path d="M114 264q82-23 152 0t145 0"/><path d="M1194 242q83-21 153 0t135 0"/><path d="M1110 279q53-14 96 0"/>
+  </g>
+  <rect width="1600" height="900" fill="#263c36" opacity=".07"/>
+</svg>

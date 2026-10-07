@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Windrest Mountain</title>
+  <desc id="desc">Original 16:9 anime fantasy landscape of Windrest Mountain, with Jingfu Harbor along a bright blue coast, a windmill village on green slopes, and the quiet ruins of an old sanatorium beneath the high peaks.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#59a9dc"/><stop offset=".55" stop-color="#a8d6e4"/><stop offset="1" stop-color="#f6dfae"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#54c0d0"/><stop offset=".48" stop-color="#3b9eb8"/><stop offset="1" stop-color="#28758f"/></linearGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2=".15" y2="1"><stop stop-color="#bdd27e"/><stop offset=".55" stop-color="#80ad69"/><stop offset="1" stop-color="#477e61"/></linearGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f2dfb8"/><stop offset="1" stop-color="#b9a982"/></linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e27d5e"/><stop offset="1" stop-color="#a94e4b"/></linearGradient>
+    <radialGradient id="sunGlow"><stop stop-color="#fff5cb" stop-opacity=".9"/><stop offset="1" stop-color="#fff5cb" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff4da" stop-opacity=".42"/><stop offset="1" stop-color="#fff4da" stop-opacity="0"/></linearGradient>
+    <radialGradient id="harborLight"><stop stop-color="#fff0bd" stop-opacity=".68"/><stop offset="1" stop-color="#fff0bd" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="25"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="13"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="2" seed="11"/><feColorMatrix values=".55 0 0 0 .22 .55 0 0 0 .24 .55 0 0 0 .2 0 0 0 .11 0"/></filter>
+    <filter id="shadow" x="-.2" y="-.2" width="1.4" height="1.5"><feGaussianBlur in="SourceAlpha" stdDeviation="7"/><feOffset dy="7"/><feComponentTransfer><feFuncA type="linear" slope=".2"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1260" cy="150" r="210" fill="url(#sunGlow)"/><circle cx="1260" cy="150" r="62" fill="#fff1c2" opacity=".95"/>
+    <circle cx="1260" cy="150" r="310" fill="url(#sunGlow)"/><circle cx="1260" cy="150" r="62" fill="#fff1c2" opacity=".98"/>
+    <path d="M1260 208 825 622 1140 596Z" fill="#fff4cf" opacity=".075"/><path d="M1260 208 1374 607 1544 653Z" fill="#fff4cf" opacity=".065"/>
+  <g fill="#fffdf3" opacity=".78"><path d="M130 167q35-40 75-6 36-42 78 2 38-25 72 9-4 20-27 22H157q-25-2-27-27Z"/><path d="M500 105q28-28 60-5 32-30 67 3 32-19 60 11-4 17-22 18H517q-16-3-17-27Z"/><path d="M1050 277q38-38 81-5 37-32 75 8-4 17-22 18h-113q-19-3-21-21Z"/></g>
+  <!-- Layered alpine peaks -->
+  <path d="M0 512 151 376 238 431 387 257 492 397 612 295 752 422 907 229 1047 405 1169 278 1327 414 1462 302 1600 383V650H0Z" fill="#829dab" opacity=".76"/>
+  <path d="m151 376 87 55 149-174 105 140 120-102 140 127 155-193 140 176 122-127 158 136 135-112 138 81v115H0v-79Z" fill="#e8eee1" opacity=".74"/>
+  <path d="M0 537q164-98 314-26 137 65 300-10 170-80 324 12 167 99 315 14 182-103 347-6v227H0Z" fill="#638d71"/>
+  <!-- Open sea and curved coast -->
+  <path d="M0 514q230 10 369 101 112 73 254 43 178-38 319 20 140 57 249 34 167-34 409 70v118H0Z" fill="url(#sea)"/>
+  <g fill="none" stroke="#c7f3e9" stroke-linecap="round" opacity=".66"><path d="M74 647q113-13 221 2m-116 45q86-9 165 2m245-65q98-12 196 4m315 54q126-11 243 3m87 52q109-14 206 0" stroke-width="5"/><path d="M224 752q67-8 129 1m519-115q61-6 121 2m-572 148q99-9 191 0" stroke-width="2"/></g>
+  <path d="M0 592q185-30 360 27 135 44 265 25-67 90-195 116L0 767Z" fill="#e7d79c" opacity=".9"/>
+  <!-- Jingfu Harbor: sheltered cove, piers, boats, clustered homes -->
+  <g filter="url(#shadow)">
+    <path d="M72 565V439l83-61 88 61v131Z" fill="#ead7b0" stroke="#9a8061" stroke-width="4"/><path d="m53 443 102-87 105 87Z" fill="url(#roof)" stroke="#914b49" stroke-width="5"/>
+    <path d="M264 583V482l64-48 68 48v105Z" fill="#f0dfba" stroke="#a08a69" stroke-width="4"/><path d="m248 485 80-72 83 72Z" fill="#617c85" stroke="#405b66" stroke-width="5"/>
+    <path d="M420 606V500l70-54 72 54v108Z" fill="#e4d0a5" stroke="#9b8060" stroke-width="4"/><path d="m401 504 89-78 91 78Z" fill="url(#roof)" stroke="#914b49" stroke-width="5"/>
+    <path d="M143 473q0-17 16-17t16 17v27h-32Zm169 37q0-15 14-15t14 15v20h-28Zm207 2q0-15 14-15t14 15v22h-28Z" fill="#4c7786" stroke="#f0dfbd" stroke-width="4"/>
+  </g>
+  <g stroke="#795f43" stroke-width="13" stroke-linecap="round"><path d="M60 603h502m-458 0v69m88-69v88m112-88v76m101-76v91m97-91v67"/><path d="M96 675h442" stroke-width="8"/></g>
+  <g><path d="M120 626h99l-16 35h-65Z" fill="#f3e3bc" stroke="#715e48" stroke-width="4"/><path d="M168 626v-62l52 62Z" fill="#f8f1d9" stroke="#536975" stroke-width="4"/><path d="M354 641h86l-14 30h-58Z" fill="#e7c78b" stroke="#715e48" stroke-width="4"/><path d="M398 641v-51l41 51Z" fill="#fff0ca" stroke="#536975" stroke-width="3"/></g>
+  <!-- Green hillside rising to the windmill village -->
+  <path d="M468 541q202-220 383-171 125 34 217-59 156-158 368-38l164 116v410H400q99-117 68-258Z" fill="url(#hill)"/>
+  <path d="M547 622q138-122 266-80 112 37 234-72 150-134 336-44" fill="none" stroke="#d9e3a1" stroke-width="18" opacity=".55"/>
+  <path d="M618 728q156-105 275-58 137 55 274-60 107-90 279-71" fill="none" stroke="#51845e" stroke-width="15" opacity=".6"/>
+  <!-- Windmill village buildings -->
+  <g filter="url(#shadow)">
+    <path d="M780 488V396l60-48 64 48v103Z" fill="#f4e2bc" stroke="#a28b67" stroke-width="4"/><path d="m765 399 75-69 78 69Z" fill="url(#roof)" stroke="#974e47" stroke-width="5"/>
+    <path d="M941 449V353l68-52 68 52v94Z" fill="#f1ddb4" stroke="#9e8664" stroke-width="4"/><path d="m923 356 86-77 87 77Z" fill="#536e78" stroke="#374f5c" stroke-width="5"/>
+    <path d="M1114 389V307l56-43 58 43v83Z" fill="#f3e1bb" stroke="#a28a68" stroke-width="4"/><path d="m1098 310 72-64 74 64Z" fill="url(#roof)" stroke="#974e47" stroke-width="5"/>
+    <path d="M900 560V479l52-39 55 39v77Z" fill="#eddbb3" stroke="#9f8966" stroke-width="4"/><path d="m886 482 66-59 69 59Z" fill="#647d83" stroke="#3f5c65" stroke-width="4"/>
+  </g>
+  <g fill="#507886" stroke="#f6e7c6" stroke-width="4"><path d="M810 422q0-16 14-16t14 16v20h-28Zm175-50q0-18 16-18t16 18v25h-32Zm198-4q0-14 13-14t13 14v20h-26Zm-176 133q0-13 12-13t12 13v18h-24Z"/></g>
+  <!-- Windmills with bright cloth sails -->
+  <g stroke="#fff2ce" stroke-width="8" stroke-linecap="round"><path d="M1010 300V191m0 0-40-37m40 37 42-45m-42 45-50 15m50-15 49 19"/><path d="M1270 448V333m0 0-42-38m42 38 45-46m-45 46-51 14m51-14 51 18"/><path d="M728 498V411m0 0-32-31m32 31 34-37m-34 37-41 12m41-12 40 16"/></g>
+  <g fill="#a64f4b"><circle cx="1010" cy="191" r="9"/><circle cx="1270" cy="333" r="9"/><circle cx="728" cy="411" r="8"/></g>
+  <!-- Abandoned sanatorium on a distant ridge -->
+  <g opacity=".82">
+    <path d="M118 430V330h55V286h74v44h50v100Z" fill="#c7c3a5" stroke="#797d70" stroke-width="5"/>
+    <path d="M100 333h210l-20-29H120Z" fill="#586e78"/><path d="M189 286v-58h49v58m-38-58v-33h28v33" fill="#bfc1aa" stroke="#777e78" stroke-width="4"/>
+    <path d="M142 356q0-15 13-15t13 15v24h-26Zm81-28q0-15 13-15t13 15v25h-26Z" fill="#718891" stroke="#d7cfad" stroke-width="4"/>
+    <path d="M103 430q52-16 113-5t107 1" fill="none" stroke="#70815f" stroke-width="13"/>
+  </g>
+  <!-- Ridge road-free terraces and flowering slopes -->
+  <path d="M0 737q167-82 321-22 113 44 212 4 132-55 243-11 123 48 236-3 149-69 328-12 111 35 260-9v216H0Z" fill="#639269"/>
+  <path d="M0 821q201-43 367 21 119 46 234 7 150-52 267 3 154 74 302 6 219-99 430-9v51H0Z" fill="#43785d"/>
+  <g fill="#fff1bb"><circle cx="77" cy="744" r="7"/><circle cx="142" cy="785" r="5"/><circle cx="342" cy="741" r="6"/><circle cx="524" cy="823" r="5"/><circle cx="710" cy="746" r="6"/><circle cx="1377" cy="760" r="7"/><circle cx="1480" cy="812" r="5"/><circle cx="1162" cy="835" r="6"/></g>
+  <!-- A small traveler looking toward the harbor -->
+  <g transform="translate(566 680)" filter="url(#shadow)">
+    <ellipse cx="0" cy="147" rx="34" ry="9" fill="#254c53" opacity=".3"/><path d="M-19 73q19-22 38 0l16 64h-70Z" fill="#526b83"/><circle cy="52" r="15" fill="#f0c9a2"/><path d="M-20 49q20-39 41 0Z" fill="#6b4c36"/><path d="M-28 82h56" stroke="#d0b06f" stroke-width="8"/><path d="M-11 135l-12 21m34-21 11 21" stroke="#493d37" stroke-width="9"/><path d="M24 82 46 132" stroke="#735b3a" stroke-width="5"/><path d="M45 72v61m-13-45h26m-26 17h26" stroke="#f2e6c8" stroke-width="4"/>
+  </g>
+  <!-- Wind ribbons and sea sparkle -->
+  <g fill="none" stroke="#fff8dc" stroke-width="4" opacity=".78" stroke-linecap="round"><path d="M360 190q86-29 155 1t138 0"/><path d="M808 126q69-22 122 1t104 0"/><path d="M1300 215q80-25 144 1t112 0"/><path d="M52 714q105-12 202 0m348-30q82-11 157 1m604 50q93-9 170 0" stroke-width="3"/></g>
+  <g fill="#fff3c8" opacity=".7"><circle cx="106" cy="590" r="4"/><circle cx="293" cy="626" r="3"/><circle cx="571" cy="604" r="4"/><circle cx="886" cy="664" r="3"/><circle cx="1436" cy="642" r="4"/></g>
+  <!-- Soft atmospheric bloom and sunlit mountain haze -->
+  <ellipse cx="1160" cy="417" rx="490" ry="190" fill="url(#mist)" filter="url(#soft)"/>
+  <ellipse cx="344" cy="525" rx="310" ry="105" fill="url(#harborLight)" filter="url(#glow)" opacity=".45"/>
+  <g fill="none" stroke="#fff7df" stroke-linecap="round" opacity=".34">
+    <path d="M420 352q116-42 219-1m-557 105q125-44 238-5m636-20q108-35 207 2m119-93q74-26 143 4" stroke-width="3"/>
+    <path d="M360 438q92-23 166 3m564-88q86-28 152 3" stroke-width="2"/>
+  </g>
+  <!-- Fine alpine strata and sunlit snow facets -->
+  <g fill="none" stroke-linecap="round" opacity=".38">
+    <path d="M82 486q72-38 137-36m194-84q67-43 124-37m84 72q69-34 128-26m93-86q70-52 122-42m70 91q66-37 120-31m130 76q66-44 121-35" stroke="#f8f3de" stroke-width="5"/>
+    <path d="M72 509q55-20 93-17m463-95q48-23 92-19m246-93q38-22 71-19m250 122q44-27 80-25" stroke="#526f7f" stroke-width="3"/>
+  </g>
+  <g fill="#fffdf0" opacity=".56"><path d="m377 258 27 37-25-10-17 20 12-33Z"/><path d="m904 230 31 39-30-13-17 21 8-31Z"/><path d="m1168 279 23 30-23-9-15 15 7-24Z"/><path d="m613 296 19 28-21-8-13 13 5-22Z"/></g>
+  <!-- Harbor cranes, lanterns, cargo and mooring details -->
+  <g fill="none" stroke="#765e43" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M91 592V520l71-30 69 30m-69-30v97m-55-70 55-26 55 26" stroke-width="8"/>
+    <path d="M105 520v36m112-36v37" stroke-width="4"/>
+    <path d="M454 595V522l46-23 48 23m-48-23v84" stroke-width="7"/>
+    <path d="M53 612h525" stroke-width="5" opacity=".7"/>
+  </g>
+  <g fill="#8e704a"><rect x="77" y="657" width="34" height="29" rx="5"/><path d="M77 665h34m-27-8v25m13-25v25m8-25v25" fill="none" stroke="#c59b62" stroke-width="3"/><rect x="478" y="668" width="30" height="25" rx="4"/><path d="M478 676h30m-22-8v22m11-22v22" fill="none" stroke="#c59b62" stroke-width="3"/></g>
+  <g><path d="M282 601v52" stroke="#654f38" stroke-width="5"/><path d="M269 603h26l-4 20h-18Z" fill="#f5d78a" stroke="#8a6747" stroke-width="3"/><ellipse cx="282" cy="615" rx="20" ry="25" fill="#ffe7a1" opacity=".22" filter="url(#glow)"/></g>
+  <g fill="none" stroke="#d9c69b" stroke-width="3" opacity=".85"><path d="M135 696q90 18 184 4m102 2q46 9 82 1m-297-28v15m40-13v16m42-15v18m42-15v13"/><path d="M600 581q28-18 54-2m-88 19q26-13 44-2"/></g>
+  <!-- Timber framing, dormers, chimneys and warm interior windows -->
+  <g fill="none" stroke="#9e7958" stroke-width="4" opacity=".82">
+    <path d="M92 458h134m-121 0v57m57-57v57m55-57v57m-108-26h108"/>
+    <path d="M432 519h104m-91 0v65m45-65v65m43-65v65m-88-30h88"/>
+    <path d="M796 405h99m-86 0v62m43-62v62m42-62v62m-79-31h79"/>
+    <path d="M958 365h101m-86 0v72m43-72v72m43-72v72m-86-35h86"/>
+    <path d="M1131 320h88m-74 0v54m37-54v54m37-54v54m-74-26h74"/>
+  </g>
+  <g fill="#f4ce7d" stroke="#f7e7bd" stroke-width="3"><rect x="123" y="511" width="17" height="24" rx="7"/><rect x="188" y="511" width="17" height="24" rx="7"/><rect x="455" y="553" width="16" height="25" rx="7"/><rect x="504" y="553" width="16" height="25" rx="7"/><rect x="815" y="440" width="14" height="19" rx="6"/><rect x="863" y="440" width="14" height="19" rx="6"/><rect x="975" y="411" width="15" height="20" rx="6"/><rect x="1024" y="411" width="15" height="20" rx="6"/><rect x="1142" y="356" width="13" height="17" rx="5"/></g>
+  <g fill="#637c7a" stroke="#526b6b" stroke-width="3"><path d="M292 434h18v-30h26v30h18v-42h-62Z"/><path d="M690 457h16v-29h25v29h17v-41h-58Z"/><path d="M1075 287h18v-33h26v33h17v-45h-61Z"/></g>
+  <!-- Windmill lattice sails and cloth pennants -->
+  <g stroke="#fff4d7" stroke-width="4" opacity=".88"><path d="M1010 191 970 154m40 37 42-45m-42 45-50 15m50-15 49 19M1010 174v35"/><path d="M1270 333 1228 295m42 38 45-46m-45 46-51 14m51-14 51 18M1270 316v35"/><path d="M728 411 696 380m32 31 34-37m-34 37-41 12m41-12 40 16M728 399v26"/></g>
+  <g fill="#d96e59"><path d="M962 151q-24-10-31-32 27 4 42 21Z"/><path d="M1049 143q19-18 43-17-9 22-32 32Z"/><path d="M1238 292q-24-11-30-34 26 5 41 23Z"/><path d="M1311 286q18-18 42-16-9 22-31 32Z"/></g>
+  <!-- Sanatorium age: ivy, broken parapet, cracked plaster -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M126 338q-22 19-15 49t-10 41m161-93q20 18 10 41t13 36m-78-90q-8 22 1 39" stroke="#64815b" stroke-width="8"/>
+    <path d="m193 320 8 17-8 15 13 16m42-82-8 18 10 14-12 19m-90 24-12 9 5 12" stroke="#777c6b" stroke-width="3"/>
+  </g>
+  <g fill="#6d9660"><ellipse cx="111" cy="364" rx="8" ry="15" transform="rotate(-35 111 364)"/><ellipse cx="113" cy="398" rx="8" ry="14" transform="rotate(38 113 398)"/><ellipse cx="275" cy="355" rx="8" ry="15" transform="rotate(38 275 355)"/><ellipse cx="276" cy="390" rx="8" ry="13" transform="rotate(-38 276 390)"/></g>
+  <!-- Lush foreground leaves and flower clusters -->
+  <g stroke-linecap="round">
+    <path d="M0 900q32-96 15-173m24 173q65-90 74-172m-13 172q25-110 15-202m1483 202q-42-98-22-181m-18 181q-8-105 17-200m51 200q61-82 58-148" fill="none" stroke="#315f4b" stroke-width="13"/>
+    <g fill="#4c8b62" stroke="#78a96d" stroke-width="2"><path d="M16 786q-49-54-3-81 34 37 3 81Zm49 48q-53-37-20-75 42 23 20 75Zm-54 34q-40-54 5-77 31 39-5 77Zm1464-73q49-51 9-81-38 37-9 81Zm-53 53q58-33 27-74-45 20-27 74Zm107 28q37-56-10-77-28 41 10 77Z"/></g>
+  </g>
+  <g><g fill="#f9e7a4"><circle cx="70" cy="780" r="8"/><circle cx="93" cy="768" r="6"/><circle cx="83" cy="796" r="6"/><circle cx="1500" cy="778" r="8"/><circle cx="1521" cy="765" r="6"/><circle cx="1510" cy="796" r="6"/></g><g fill="#e98978"><circle cx="129" cy="846" r="7"/><circle cx="145" cy="834" r="5"/><circle cx="1380" cy="843" r="7"/><circle cx="1396" cy="831" r="5"/></g></g>
+  <!-- Fine painterly grain and luminous edge accents -->
+  <rect width="1600" height="900" filter="url(#grain)" opacity=".11"/>
+  <g fill="none" stroke="#fff8e6" stroke-width="2" opacity=".24"><path d="M55 563q73-37 137-26m245 79q52-23 91-14m286-158q37-22 72-13m441-71q42-24 75-15"/><path d="M635 718q68-32 125-11m338-47q65-29 119-18"/></g>
+  <rect width="1600" height="900" fill="#23453f" opacity=".045"/>
+</svg>

@@ -1,0 +1,5 @@
+services:
+  survival-game:
+    volumes:
+      - ./src:/app/src:ro
+      - ./server/server.js:/app/server/server.js:ro

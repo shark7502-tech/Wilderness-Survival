@@ -251,6 +251,27 @@ backgrounds: {
 
 ---
 
+## Docker 部署
+
+正式執行會將伺服器與前端檔案打包至 Docker 映像，並固定將主機 `3000` 埠映射到容器 `3000` 埠：
+
+```bash
+docker compose up --build -d
+```
+
+遊戲網址：`http://localhost:3000/medieval_rpg.html`
+主選單：`http://localhost:3000/game.html`
+
+本機原始碼仍保留在工作區，可直接編輯。若要在本機開發時讓容器使用工作區檔案，執行：
+
+```bash
+docker compose -f compose.yaml -f compose.dev.yaml up --build
+```
+
+開發模式會掛載 `src/` 與伺服器程式；前端變更可在瀏覽器重新整理後查看，伺服器程式變更後請重啟容器。停止服務可執行 `docker compose down`。若主機的 `3000` 埠已被其他服務占用，請先停止該服務。
+
+---
+
 ## ✨ 特色功能
 
 ### 角色卡系統

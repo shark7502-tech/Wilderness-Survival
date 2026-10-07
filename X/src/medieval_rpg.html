@@ -120,6 +120,23 @@
             font-style: italic;
         }
 
+        .scene-npc {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 8px 12px;
+            border: 1px solid rgba(139, 69, 19, 0.5);
+            border-radius: 8px;
+            background: rgba(255, 248, 220, 0.75);
+            color: #3d2b1f;
+            text-align: left;
+        }
+
+        .scene-npc[hidden] { display: none; }
+        .npc-avatar { font-size: 34px; }
+        .scene-npc small { display: block; color: #6d5544; margin-top: 2px; }
+
         .controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -533,9 +550,233 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
+
+        [hidden] { display: none !important; }
+        body { padding: 0; background: #101a16; color: #f1f2e9; font-family: Georgia, 'Noto Serif TC', serif; }
+        button { font-family: inherit; }
+        .main-menu { position: relative; min-height: 100vh; overflow: hidden; display: grid; grid-template-columns: minmax(260px, .9fr) minmax(300px, 420px); align-content: center; align-items: center; gap: 8vw; padding: 9vh 11vw; background: linear-gradient(90deg, rgba(12, 22, 17, .95) 0%, rgba(12, 22, 17, .86) 42%, rgba(12, 22, 17, .3) 100%), url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2000&q=85') center/cover; }
+        .menu-brand, .menu-options, .menu-footer { position: relative; z-index: 1; }
+        .eyebrow { color: #c4d278; font: 700 11px/1.4 Arial, sans-serif; letter-spacing: 2px; }
+        .menu-brand h1 { text-align: left; color: #f2efd9; font-size: clamp(44px, 6vw, 78px); line-height: 1.08; margin: 12px 0 18px; text-shadow: none; }
+        .menu-brand p:last-child { color: #d1d8c6; font-size: 17px; line-height: 1.8; max-width: 360px; }
+        .menu-options { display: grid; gap: 10px; }
+        .menu-option { padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; text-align: left; color: #edf0e5; background: rgba(16, 30, 23, .78); border: 1px solid rgba(218, 228, 202, .26); border-left: 3px solid #718758; cursor: pointer; transition: .18s ease; }
+        .menu-option span { font-size: 17px; font-weight: 700; }
+        .menu-option small { color: #aeb9a6; font: 12px Arial, sans-serif; text-align: right; }
+        .menu-option:hover { transform: translateX(5px); border-color: #c4d278; background: rgba(37, 57, 40, .93); }
+        .menu-option.primary { border-left-color: #d3a85c; }
+        .menu-footer { position: absolute; left: 11vw; right: 11vw; bottom: 28px; display: flex; justify-content: space-between; color: #c1cabc; font: 11px Arial, sans-serif; }
+        .game-screen { min-height: 100vh; padding: 0 24px 28px; }
+        .game-topbar { height: 76px; max-width: 1500px; margin: auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(228, 233, 215, .14); }
+        .brand-mark { color: #f1f2e9; font-size: 18px; font-weight: bold; text-decoration: none; }
+        .brand-mark span { color: #c4d278; padding: 0 4px; }
+        .clock-cluster { display: flex; align-items: center; gap: 28px; }
+        .clock-readout, .period-readout { display: flex; flex-direction: column; gap: 2px; }
+        .clock-readout small, .period-readout small { font: 10px Arial, sans-serif; color: #a8b2a6; }
+        .clock-readout strong, .period-readout strong { font-size: 15px; color: #f0efdf; }
+        .clock-readout span { color: #a8b2a6; font: 10px Arial, sans-serif; }
+        .period-readout { flex-direction: row; align-items: center; gap: 9px; border-left: 1px solid rgba(255,255,255,.18); padding-left: 22px; }
+        .period-readout > span { font-size: 27px; }
+        .period-readout div { display: grid; gap: 1px; }
+        .top-icon-button { width: 40px; aspect-ratio: 1; border: 1px solid #74815f; background: #26372b; color: #d3dfba; cursor: pointer; font-size: 18px; }
+        .title-container { display: none; }
+        .container { max-width: 1500px; min-height: calc(100vh - 105px); grid-template-columns: minmax(0, 1.45fr) minmax(300px, .72fr); gap: 18px; }
+        .game-section { background: #17231c; border: 1px solid #344538; border-radius: 3px; padding: 18px; }
+        .left-section h2, .right-section h2 { color: #d9dfc9; border-bottom: 1px solid #40503f; font-size: 15px; letter-spacing: 0; }
+        .scene-display { min-height: 330px; margin-bottom: 14px; border: 1px solid #73845e; border-radius: 2px; background: linear-gradient(180deg, rgba(25, 55, 44, .08), rgba(14, 24, 18, .56)), linear-gradient(145deg, #8d9d72, #c1b986 48%, #566c4a); }
+        .scene-display::before { background: radial-gradient(ellipse at 20% 10%, rgba(255,255,220,.28), transparent 35%), linear-gradient(130deg, transparent 55%, rgba(20,43,33,.18)); }
+        .scene-display.base-scene { background: linear-gradient(180deg, rgba(21, 39, 27, .08), rgba(14, 24, 18, .5)), linear-gradient(135deg, #899b69, #d4bc7e 50%, #647755); }
+        .scene-display.battle-scene { background: radial-gradient(ellipse at center, rgba(159, 61, 43, .18), transparent 53%), linear-gradient(145deg, #443d34, #715948 52%, #242720); border-color: #bf765b; }
+        .scene-content { max-width: 620px; }
+        .scene-emoji { font-size: 66px; margin-bottom: 10px; }
+        .scene-name { color: #f2f1e7; font-size: 25px; text-shadow: 0 2px 8px #253226; }
+        .scene-description, .scene-info { color: #f1f2e9; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+        .controls { max-width: 310px; margin: 0 auto 12px; gap: 5px; }
+        .btn, .btn-action, .battle-btn, .secondary-button { border-radius: 2px; transition: .15s ease; text-transform: none; }
+        .btn { min-height: 42px; padding: 8px; border: 1px solid #58694e; color: #e6ebd8; background: #28392d; }
+        .btn:hover, .btn-action:hover, .battle-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 18px rgba(0,0,0,.22); }
+        .action-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+        .btn-action { min-height: 47px; padding: 10px 8px; border: 1px solid #465744; background: #26392d; color: #e6ebd8; font-size: 12px; }
+        .btn-action:hover { background: #354c39; }
+        .battle-section { margin-top: 0; border: 1px solid #9a604b; border-radius: 2px; background: #211f1b; padding: 15px; }
+        .battle-section h2 { color: #e5a085; border-color: #754a3a; }
+        .battle-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .battle-btn { border: 1px solid #79513e; background: #543a2e; color: #f6e7d6; min-height: 56px; }
+        .right-section { padding: 0; align-self: start; position: sticky; top: 12px; max-height: calc(100vh - 90px); overflow: auto; }
+        .panel-tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid #40503f; position: sticky; top: 0; background: #17231c; z-index: 2; }
+        .panel-tab { padding: 14px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #aeb8a6; cursor: pointer; font-size: 12px; }
+        .panel-tab.active { border-color: #c4d278; color: #f0efdf; }
+        .info-panel { display: none; padding: 17px; }
+        .info-panel.active { display: block; }
+        .info-panel h2 { margin-top: 2px; }
+        .attribute-row { gap: 8px; }
+        .attribute-item, .skill-item, .inventory { background: rgba(202, 220, 170, .055); border-color: #3b4b3b; border-radius: 2px; }
+        .attribute-label { color: #aebd86; }
+        .attribute-value { font-size: 15px; }
+        .hp-bar { height: 7px; border: 0; border-radius: 0; background: #344137; }
+        .hp-fill { border-radius: 0; }
+        .inventory-item { background: #2e4033; border-color: #62704c; border-radius: 2px; }
+        .element { border-color: #40503f; border-radius: 2px; }
+        .base-section { margin-top: 14px; border: 1px solid #74815f; border-radius: 2px; background: #1e2c21; padding: 14px; }
+        .base-section .base-actions { display: none; }
+        .base-info, .base-storage { background: transparent; border-color: #435340; border-radius: 2px; }
+        .companion-card { display: grid; grid-template-columns: 58px 1fr; gap: 12px; padding: 13px; border: 1px solid #40503f; background: #1c2a20; }
+        .companion-portrait { display: grid; place-items: center; width: 56px; height: 64px; background: #3d4b37; font-size: 34px; }
+        .companion-card strong { color: #edf0e4; }
+        .companion-card small, .panel-note, .setting-row small { display: block; margin-top: 4px; color: #a7b19e; font: 11px Arial, sans-serif; }
+        .affinity-line { display: flex; justify-content: space-between; margin-top: 12px; color: #c7d1bc; font: 11px Arial, sans-serif; }
+        .affinity-track { height: 5px; margin-top: 5px; background: #384438; }
+        .affinity-track i { display: block; width: 32%; height: 100%; background: #d2a65b; }
+        .panel-note { line-height: 1.7; margin-top: 14px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #40503f; color: #edf0e4; }
+        .setting-row input { width: 38px; height: 20px; accent-color: #9caf68; }
+        .setting-row input[type="range"] { width: 112px; height: 18px; accent-color: #c4d278; }
+        .setting-row select { max-width: 155px; padding: 8px 10px; border: 1px solid #53634d; border-radius: 2px; background: #26392d; color: #e5eadb; font: 12px Arial, sans-serif; }
+        .secondary-button { width: 100%; margin-top: 9px; padding: 11px; border: 1px solid #53634d; background: #26392d; color: #e5eadb; cursor: pointer; }
+        .overlay-layer { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 18px; background: rgba(8, 14, 10, .78); }
+        .overlay-panel { position: relative; width: min(520px, 100%); max-height: 90vh; overflow: auto; padding: 28px; background: #19251d; border: 1px solid #76815c; box-shadow: 0 25px 80px rgba(0,0,0,.35); }
+        .overlay-panel h2 { margin: 7px 0 20px; color: #f1f0e2; font-size: 24px; }
+        .close-button { position: absolute; right: 14px; top: 10px; border: 0; color: #dce3d3; background: transparent; font-size: 26px; cursor: pointer; }
+        .save-slot-list { display: grid; gap: 8px; }
+        .save-slot { display: grid; grid-template-columns: 35px 1fr auto; gap: 10px; align-items: center; text-align: left; padding: 13px; border: 1px solid #435340; color: #ecf0e5; background: #202f24; cursor: pointer; }
+        .save-slot:disabled { opacity: .5; cursor: default; }
+        .item-catalog-list { display: grid; gap: 7px; max-height: 65vh; overflow: auto; }
+        .item-catalog-entry { padding: 10px; border: 1px solid #435340; background: #202f24; color: #ecf0e5; }
+        .item-catalog-entry strong, .item-catalog-entry small { display: block; }
+        .item-catalog-entry strong { color: #d9ce9c; margin-bottom: 5px; }
+        .item-catalog-entry small { color: #b6c1ac; line-height: 1.5; }
+        .slot-number { color: #d2a65b; font-size: 17px; }
+        .slot-detail strong, .slot-detail small { display: block; }
+        .slot-detail small, .slot-action { color: #a9b49f; font: 10px Arial, sans-serif; margin-top: 4px; }
+        .timezone-summary { display: flex; align-items: center; gap: 12px; padding: 13px; margin-top: 16px; background: #223127; color: #dce5ce; }
+        .timezone-summary > span { font-size: 25px; }
+        .timezone-summary small, .timezone-summary strong { display: block; }
+        .timezone-summary small { color: #a8b39e; font: 10px Arial, sans-serif; }
+        .collection-panel { width: min(1100px, 100%); height: min(90vh, 850px); display: flex; flex-direction: column; }
+        .collection-panel iframe { flex: 1; width: 100%; border: 1px solid #435340; background: #111; }
+        .collection-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+        .collection-tabs .secondary-button { width: auto; margin: 0; }
+        .collection-asset-gallery { flex: 1; overflow: auto; min-height: 0; }
+        .scene-art-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .scene-art-card { min-width: 0; border: 1px solid #53634d; background: #1d2a20; }
+        .scene-art-image { width: 100%; aspect-ratio: 16 / 9; background-position: center; background-size: cover; }
+        .scene-art-caption { padding: 9px 10px 10px; color: #edf0e4; font-size: 12px; }
+        .scene-art-caption small { display: block; margin-top: 4px; color: #a8b39e; font: 10px Arial, sans-serif; }
+        @media (max-width: 700px) { .scene-art-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .scene-npc { border-radius: 2px; }
+        @media (max-width: 850px) {
+            .main-menu { grid-template-columns: 1fr; align-content: center; gap: 28px; padding: 8vh 8vw 80px; background-position: 58% center; }
+            .menu-brand h1 { font-size: 48px; }
+            .menu-options { max-width: 520px; width: 100%; }
+            .menu-option { align-items: flex-start; flex-direction: column; gap: 6px; }
+            .menu-option small { text-align: left; }
+            .menu-footer { left: 8vw; right: 8vw; gap: 14px; flex-wrap: wrap; }
+            .game-screen { padding: 0 12px 20px; }
+            .game-topbar { height: 68px; }
+            .clock-cluster { gap: 10px; }
+            .period-readout { padding-left: 10px; }
+            .container { grid-template-columns: 1fr; }
+            .right-section { position: static; max-height: none; grid-row: 1; }
+            .left-section { grid-row: 2; }
+            .scene-display { min-height: 270px; padding: 22px; }
+        }
+        @media (max-width: 480px) {
+            .clock-readout span { display: none; }
+            .clock-readout strong, .period-readout strong { font-size: 12px; }
+            .clock-readout small, .period-readout small { font-size: 9px; }
+            .top-icon-button { width: 34px; }
+            .action-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .battle-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .game-section { padding: 13px; }
+        }
+
+        .game-screen { position: fixed; inset: 0; z-index: 1; min-height: 100dvh; padding: 0; overflow: hidden; background: #101a16; }
+        .game-topbar { position: absolute; inset: 0 0 auto; z-index: 8; width: 100%; height: 76px; max-width: none; margin: 0; padding: 0 30px; border: 0; background: linear-gradient(180deg, rgba(10,17,13,.84), rgba(10,17,13,0)); }
+        .container { position: absolute; inset: 0; display: block; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 0; }
+        .left-section { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; padding: 0; border: 0; border-radius: 0; background: transparent; }
+        .left-section > h2 { display: none; }
+        .scene-display { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; overflow: hidden; border: 0; border-radius: 0; background-color: #243d30; background-size: cover; background-position: center; }
+        .scene-display::before { z-index: 1; background: linear-gradient(180deg, rgba(8,14,11,.18), transparent 22%, transparent 48%, rgba(8,14,11,.62)), linear-gradient(90deg, rgba(8,14,11,.18), transparent 60%); }
+        .scene-content { position: absolute; z-index: 2; left: clamp(20px, 4vw, 64px); bottom: 192px; width: min(58vw, 760px); max-width: 760px; text-align: left; }
+        .scene-emoji { display: none; }
+        .scene-biome { color: #e3d8a9; font: 700 11px/1.4 Arial, sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,.65); }
+        .scene-name { margin: 8px 0 9px; color: #f4f0df; font-size: clamp(25px, 3vw, 39px); text-shadow: 0 2px 16px rgba(0,0,0,.72); }
+        .scene-description { max-width: 620px; margin-bottom: 8px; color: #f1f2e9; text-shadow: 0 1px 8px rgba(0,0,0,.82); }
+        .scene-info { color: #ece8d9; text-shadow: 0 1px 8px rgba(0,0,0,.82); }
+        .scene-npc { background: rgba(14,24,17,.72); border-color: rgba(231,235,216,.3); color: #f3f0e5; backdrop-filter: blur(8px); }
+        .scene-npc small { color: #ccd2be; }
+        .controls { position: absolute; z-index: 4; left: 28px; bottom: 25px; width: 198px; max-width: none; margin: 0; gap: 5px; }
+        .btn { min-height: 42px; border-color: rgba(220,229,202,.32); background: rgba(15,28,20,.66); color: #f0efdf; backdrop-filter: blur(10px); }
+        .action-buttons { position: absolute; z-index: 4; left: 246px; right: 374px; bottom: 24px; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(220,229,202,.2); background: rgba(12,23,16,.62); backdrop-filter: blur(12px); }
+        .btn-action { min-height: 42px; border-color: rgba(220,229,202,.22); background: rgba(36,56,39,.8); color: #f0efdf; }
+        .btn-action:hover { background: rgba(70,93,55,.92); }
+        .right-section { position: absolute; z-index: 6; top: 86px; right: 18px; bottom: 18px; width: 335px; max-height: none; overflow: auto; align-self: auto; border: 1px solid rgba(226,232,212,.25); background: rgba(16,27,20,.76); backdrop-filter: blur(16px); box-shadow: 0 14px 42px rgba(0,0,0,.24); }
+        .panel-tabs { background: rgba(16,27,20,.92); }
+        .info-panel { background: transparent; }
+        .base-section { position: absolute; z-index: 5; top: 94px; left: 28px; width: min(340px, calc(100vw - 56px)); max-height: 28vh; overflow: auto; margin: 0; background: rgba(16,27,20,.72); backdrop-filter: blur(14px); }
+        .base-section h2 { color: #e7ebd9; }
+        .battle-section { position: absolute; z-index: 5; left: 28px; right: 374px; bottom: 20px; max-height: 47vh; overflow: auto; margin: 0; background: rgba(24,21,18,.84); backdrop-filter: blur(15px); }
+        .battle-arena { gap: 10px; margin-bottom: 10px; }
+        .battle-character { padding: 8px; background: rgba(255,255,255,.045); }
+        .character-emoji { font-size: 32px; margin-bottom: 3px; }
+        .battle-log { height: 70px; padding: 8px; }
+        .battle-btn { min-height: 45px; padding: 7px; background: rgba(86,55,41,.88); }
+        @media (max-width: 850px) {
+            .game-screen { padding: 0; }
+            .game-topbar { height: 68px; padding: 0 14px; }
+            .container { display: block; }
+            .scene-content { left: 18px; bottom: 178px; width: min(76vw,600px); }
+            .controls { left: 10px; bottom: 12px; width: 150px; }
+            .action-buttons { left: 166px; right: 10px; bottom: 12px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; padding: 7px; }
+            .btn-action { min-height: 38px; padding: 6px; font-size: 11px; }
+            .right-section { top: 76px; right: 10px; bottom: auto; width: min(300px,calc(100vw - 20px)); max-height: 38vh; }
+            .info-panel { padding: 11px; }
+            .base-section { top: 76px; left: 10px; width: min(270px,calc(100vw - 20px)); max-height: 30vh; }
+            .battle-section { left: 10px; right: 10px; bottom: 12px; max-height: 43vh; }
+            .battle-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
+        }
+        @media (max-width: 480px) {
+            .game-topbar { height: 62px; padding: 0 10px; }
+            .brand-mark { font-size: 14px; }
+            .clock-cluster { gap: 8px; }
+            .period-readout { padding-left: 8px; }
+            .scene-content { bottom: 178px; left: 14px; width: calc(100vw - 28px); }
+            .scene-name { font-size: 25px; }
+            .scene-description { font-size: 13px; line-height: 1.45; }
+            .controls { width: 132px; bottom: 10px; left: 8px; }
+            .btn { min-height: 36px; font-size: 11px; }
+            .action-buttons { left: 145px; right: 8px; bottom: 10px; grid-template-columns: repeat(2,minmax(0,1fr)); padding: 5px; }
+            .right-section { top: 68px; right: 8px; max-height: 35vh; width: min(290px,calc(100vw - 16px)); }
+            .base-section { top: 68px; left: 8px; width: min(230px,calc(100vw - 16px)); }
+            .battle-section { left: 8px; right: 8px; bottom: 8px; max-height: 48vh; padding: 9px; }
+        }
     </style>
 </head>
 <body>
+    <main class="main-menu" id="mainMenu">
+        <div class="menu-brand">
+            <p class="eyebrow">WILDERNESS SURVIVAL</p>
+            <h1>荒野生存記</h1>
+            <p>在陌生的土地上，建立你的第一個營地。</p>
+        </div>
+        <nav class="menu-options" aria-label="主選單">
+            <button class="menu-option primary" onclick="startNewGame()"><span>開始遊戲</span><small>從荒野的第一天開始</small></button>
+            <button class="menu-option" onclick="openSaveSlots('load')"><span>讀取進度</span><small>管理最多三個存檔</small></button>
+            <button class="menu-option" onclick="openOverlay('settingsOverlay')"><span>遊戲設定</span><small>音效與遊戲選項</small></button>
+            <button class="menu-option" onclick="openOverlay('collectionOverlay')"><span>收集圖鑑</span><small>角色介紹與場景圖鑑</small></button>
+        </nav>
+        <div class="menu-footer"><span>單人探索 · 共用世界地圖</span><span id="menuLocalZone">偵測本地時區中…</span></div>
+    </main>
+
+    <div class="game-screen" id="gameScreen" hidden>
+    <header class="game-topbar">
+        <a class="brand-mark" href="#" onclick="returnToMainMenu(); return false;" aria-label="返回主選單">荒野<span>/</span>生存</a>
+        <div class="clock-cluster">
+            <div class="clock-readout"><small>玩家現實時區</small><strong id="realClock">--:--</strong><span id="realTimeZone">偵測中</span></div>
+            <div class="period-readout"><span id="periodIcon">🌤️</span><div><small>遊戲時段</small><strong id="gamePeriod">清晨</strong><span id="gameTime">--:--</span></div></div>
+        </div>
+        <button class="top-icon-button" onclick="openSaveSlots('save')" title="存檔" aria-label="存檔">▣</button>
+    </header>
     <div class="title-container">
         <h1>⚔️ 中世紀莊園冒險 ⚔️</h1>
         <p class="subtitle">探索神祕的中世紀世界，戰勝各種敵人</p>
@@ -544,31 +785,42 @@
     <div class="container">
         <!-- 左側：遊戲主體 -->
         <div class="left-section game-section">
-            <h2>探險地圖</h2>
+            <h2>當前位置</h2>
             
-            <div class="scene-display">
+            <div class="scene-display" id="sceneDisplay">
                 <div class="scene-content">
                     <div class="scene-emoji" id="sceneEmoji">🏰</div>
+                    <div class="scene-biome" id="biomeLabel">叢林</div>
                     <div class="scene-name" id="sceneName">莊園入口</div>
                     <div class="scene-description" id="sceneDescription">你來到了一個神祕的中世紀莊園...</div>
                     <div class="scene-info" id="sceneInfo"></div>
+                    <div class="scene-npc" id="sceneNpc" hidden></div>
                 </div>
             </div>
 
-            <div class="controls">
+            <div class="controls" id="movementControls">
                 <button class="btn btn-up" onclick="move('up')">⬆️ 上</button>
                 <button class="btn btn-left" onclick="move('left')">⬅️ 左</button>
                 <button class="btn btn-right" onclick="move('right')">➡️ 右</button>
                 <button class="btn btn-down" onclick="move('down')">⬇️ 下</button>
             </div>
 
-            <div class="action-buttons">
+            <div class="action-buttons" id="fieldActions">
                 <button class="btn-action" onclick="exploreScene()">🔍 探索</button>
                 <button class="btn-action" onclick="talkToNPC()">💬 對話</button>
                 <button class="btn-action" onclick="pickupItem()">📦 拾取</button>
                 <button class="btn-action" onclick="rest()">😴 休息</button>
-                <button class="btn-action" onclick="buildBase()">🏕️ 建造根據地</button>
+                <button class="btn-action" id="gatherButton" onclick="gatherAtScene()">🌿 採集</button>
+                <button class="btn-action" onclick="useInventoryItem()">🎒 使用道具</button>
                 <button class="btn-action" onclick="returnToBase()">🏠 返回根據地</button>
+            </div>
+            <div class="action-buttons base-action-menu" id="baseActions" hidden>
+                <button class="btn-action" onclick="openCraftPanel()">🛠️ 製作</button>
+                <button class="btn-action" onclick="openResearchPanel()">🧪 研發</button>
+                <button class="btn-action" onclick="useInventoryItem()">🎒 使用道具</button>
+                <button class="btn-action" onclick="rest()">😴 休息</button>
+                <button class="btn-action" onclick="sleepAtBase()">🛏️ 睡眠</button>
+                <button class="btn-action" onclick="goExplore()">🧭 外出探索</button>
             </div>
 
             <!-- 戰鬥界面 -->
@@ -605,14 +857,17 @@
                     <button class="battle-btn" id="attackBtn" onclick="playerAttack('normal')">
                         ⚔️ 普通攻擊<div class="skill-name">基本技能</div>
                     </button>
-                    <button class="battle-btn" id="skillBtn" onclick="playerAttack('skill')">
-                        🔥 元素技能<div class="skill-name">屬性攻擊</div>
-                    </button>
+                    <button class="battle-btn" id="skillBtn" onclick="playerAttack('skill')">🔥 戰技一<div class="skill-name">尚未學習</div></button>
+                    <button class="battle-btn learned-skill" id="skillBtnTwo" onclick="playerAttack('skill', 1)" hidden>🌿 戰技二<div class="skill-name">尚未學習</div></button>
+                    <button class="battle-btn learned-skill" id="skillBtnThree" onclick="playerAttack('skill', 2)" hidden>💧 戰技三<div class="skill-name">尚未學習</div></button>
                     <button class="battle-btn" id="defendBtn" onclick="playerDefend()">
                         🛡️ 防守<div class="skill-name">降低傷害</div>
                     </button>
                     <button class="battle-btn" id="itemBtn" onclick="useItem()">
                         💊 使用物品<div class="skill-name">恢復道具</div>
+                    </button>
+                    <button class="battle-btn" id="escapeBtn" onclick="attemptEscape()">
+                        🏃 逃跑<div class="skill-name">消耗 3 行動值，成功率 70%</div>
                     </button>
                 </div>
             </div>
@@ -625,13 +880,22 @@
                 <div class="base-actions">
                     <button class="btn-action" onclick="sleepAtBase()">🛏️ 睡眠</button>
                     <button class="btn-action" onclick="eatAtBase()">🍖 進食</button>
+                        <button class="btn-action" onclick="cookFood()">🍳 烹煮食材與水</button>
+                        <button class="btn-action" onclick="purifyWater()">🧂 煮製海水</button>
                     <button class="btn-action" onclick="goExplore()">🚶 外出探索</button>
                 </div>
             </div>
         </div>
 
         <!-- 右側：狀態面板 -->
-        <div class="right-section game-section">
+        <aside class="right-section game-section">
+            <nav class="panel-tabs" aria-label="資訊面板">
+                <button class="panel-tab active" data-panel="hero" onclick="selectInfoPanel('hero')">主人公</button>
+                <button class="panel-tab" data-panel="companions" onclick="selectInfoPanel('companions')">夥伴</button>
+                <button class="panel-tab" data-panel="pack" onclick="selectInfoPanel('pack')">背包</button>
+                <button class="panel-tab" data-panel="settings" onclick="selectInfoPanel('settings')">設定</button>
+            </nav>
+            <section class="info-panel active" id="panel-hero">
             <h2>角色屬性</h2>
             
             <!-- 基本屬性 -->
@@ -657,7 +921,7 @@
 
                 <div class="attribute-item" style="margin-bottom: 12px;">
                     <div class="attribute-label">⚡ 行動值</div>
-                    <div class="attribute-value" id="playerActionPoints">20/20</div>
+                    <div class="attribute-value" id="playerActionPoints">200/200</div>
                     <div class="hp-bar">
                         <div class="hp-fill" id="playerActionPointsFill" style="width: 100%; background: linear-gradient(90deg, #ffc107 0%, #ff9500 100%);"></div>
                     </div>
@@ -676,6 +940,14 @@
                     <div class="attribute-value" id="playerHunger">100/100</div>
                     <div class="hp-bar">
                         <div class="hp-fill" id="playerHungerFill" style="width: 100%; background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%);"></div>
+                    </div>
+                </div>
+
+                <div class="attribute-item" style="margin-bottom: 12px;">
+                    <div class="attribute-label">💧 水分</div>
+                    <div class="attribute-value" id="playerThirst">100/100</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="playerThirstFill" style="width: 100%; background: linear-gradient(90deg, #29b6f6 0%, #0288d1 100%);"></div>
                     </div>
                 </div>
 
@@ -747,11 +1019,19 @@
                 </div>
             </div>
 
+            </section>
+            <section class="info-panel" id="panel-companions">
+                <h2>同行夥伴</h2>
+                <div class="companion-card"><span class="companion-portrait">👩🏻‍🌾</span><div><strong>阿蓮</strong><small>同行夥伴 · 探索支援</small><div class="affinity-line"><span>親密度</span><strong id="companionAffinity">32 / 100</strong></div><div class="affinity-track"><i id="affinityFill"></i></div></div></div>
+                <p class="panel-note">旅途中互相扶持，親密度將隨事件與選擇變化。</p>
+            </section>
+            <section class="info-panel" id="panel-pack">
             <!-- 物品欄 -->
-            <h2>物品欄</h2>
+            <h2>背包</h2>
             <div class="inventory" id="inventory">
                 <div class="inventory-item">🏠 地圖</div>
             </div>
+            <button class="secondary-button" onclick="openItemCatalog()">查看道具編號、效果與配方</button>
 
             <!-- 生活技能 -->
             <h2>生活技能</h2>
@@ -782,8 +1062,33 @@
                     <div class="inventory-item equipped">🛡️ 皮盾</div>
                 </div>
             </div>
-        </div>
+            </section>
+            <section class="info-panel" id="panel-settings">
+                <h2>遊戲設定</h2>
+                <label class="setting-row"><span><strong>背景音樂</strong><small>僅於主選單播放</small></span><input id="menuMusicToggle" type="checkbox" checked onchange="setMenuMusicEnabled(this.checked)"></label>
+                <label class="setting-row"><span><strong>主選單曲目</strong><small>返回主選單時套用並從頭播放</small></span><select id="menuMusicTheme" onchange="setMenuMusicTheme(this.value)"><option value="jungle">🌿 叢林</option><option value="island">🌊 海島</option><option value="grassland">🌾 草原</option></select></label>
+                <label class="setting-row"><span><strong>音樂音量</strong><small>背景音樂 · <output id="menuMusicVolumeLabel">42%</output></small></span><input id="menuMusicVolume" type="range" min="0" max="100" step="1" value="42" oninput="setMenuMusicVolume(this.value)"></label>
+                <label class="setting-row"><span><strong>音效</strong><small>操作與事件提示音</small></span><input id="soundToggle" type="checkbox" onchange="setSoundEnabled(this.checked)"></label>
+                <button class="secondary-button" onclick="openOverlay('settingsOverlay')">更多設定</button>
+                <button class="secondary-button" onclick="openSaveSlots('save')">管理存檔</button>
+                <button class="secondary-button" onclick="returnToMainMenu()">返回主選單</button>
+            </section>
+        </aside>
     </div>
+    </div>
+
+    <section class="overlay-layer" id="saveOverlay" hidden>
+        <div class="overlay-panel"><button class="close-button" onclick="closeOverlay('saveOverlay')" aria-label="關閉">×</button><p class="eyebrow">LOCAL SAVE DATA</p><h2 id="saveOverlayTitle">存檔欄位</h2><div class="save-slot-list" id="saveSlotList"></div></div>
+    </section>
+    <section class="overlay-layer" id="settingsOverlay" hidden>
+        <div class="overlay-panel"><button class="close-button" onclick="closeOverlay('settingsOverlay')" aria-label="關閉">×</button><p class="eyebrow">PREFERENCES</p><h2>遊戲設定</h2><label class="setting-row"><span><strong>背景音樂</strong><small>僅於主選單播放</small></span><input id="menuMusicToggleModal" type="checkbox" checked onchange="setMenuMusicEnabled(this.checked)"></label><label class="setting-row"><span><strong>主選單曲目</strong><small>下次回到主選單時套用</small></span><select id="menuMusicThemeModal" onchange="setMenuMusicTheme(this.value)"><option value="jungle">🌿 叢林</option><option value="island">🌊 海島</option><option value="grassland">🌾 草原</option></select></label><label class="setting-row"><span><strong>音樂音量</strong><small>背景音樂 · <output id="menuMusicVolumeModalLabel">42%</output></small></span><input id="menuMusicVolumeModal" type="range" min="0" max="100" step="1" value="42" oninput="setMenuMusicVolume(this.value)"></label><label class="setting-row"><span><strong>音效</strong><small>操作時播放簡短提示音</small></span><input id="soundToggleModal" type="checkbox" onchange="setSoundEnabled(this.checked)"></label><div class="timezone-summary"><span>⌖</span><div><small>玩家現實時區</small><strong id="settingsTimeZone">讀取中</strong></div></div></div>
+    </section>
+    <section class="overlay-layer" id="itemCatalogOverlay" hidden>
+        <div class="overlay-panel collection-panel"><button class="close-button" onclick="closeOverlay('itemCatalogOverlay')" aria-label="關閉">×</button><p class="eyebrow">FIELD CRAFTING CATALOG</p><h2>道具與製作目錄</h2><div class="item-catalog-list" id="itemCatalogList"></div></div>
+    </section>
+    <section class="overlay-layer" id="collectionOverlay" hidden>
+        <div class="overlay-panel collection-panel"><button class="close-button" onclick="closeOverlay('collectionOverlay')" aria-label="關閉">×</button><p class="eyebrow">FIELD ARCHIVE</p><h2>收集圖鑑</h2><div class="collection-tabs"><button class="secondary-button" onclick="showCollection('art')">場景美術</button><button class="secondary-button" onclick="showCollection('gallery')">角色與場景</button><button class="secondary-button" onclick="showCollection('characters')">角色介紹</button></div><div class="collection-asset-gallery" id="collectionAssetGallery"></div><iframe title="角色與場景圖鑑" id="collectionFrame" src="gallery.html" hidden></iframe></div>
+    </section>
 
     <!-- 對話框 -->
     <div class="modal" id="messageModal">
@@ -796,6 +1101,8 @@
         </div>
     </div>
 
+    <script src="scene-art.js"></script>
+    <script src="menu-music.js"></script>
     <script src="medieval_rpg.js"></script>
 </body>
 </html>
