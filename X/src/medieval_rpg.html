@@ -645,6 +645,25 @@
         .item-catalog-entry strong, .item-catalog-entry small { display: block; }
         .item-catalog-entry strong { color: #d9ce9c; margin-bottom: 5px; }
         .item-catalog-entry small { color: #b6c1ac; line-height: 1.5; }
+        .tech-tree-panel, .merchant-panel { width: min(900px, 100%); }
+        .tech-tree-summary, .merchant-summary { padding: 12px 14px; margin-bottom: 14px; border: 1px solid #526448; background: #202f24; color: #ecebdc; }
+        .tech-branch-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .tech-path-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #4e6048; background: #202f24; }
+        .tech-path-card strong { color: #e4d6a7; }
+        .tech-path-card p, .tech-path-card small { margin: 0; color: #c3cebb; line-height: 1.55; }
+        .tech-path-card .secondary-button { margin-top: auto; }
+        .merchant-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .merchant-lists h3 { margin: 10px 0; color: #e4d6a7; font-size: 15px; }
+        .merchant-stock-list, .merchant-sell-list { display: grid; gap: 8px; }
+        .merchant-stock-row, .merchant-sell-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px; border: 1px solid #435340; background: #202f24; color: #ecf0e5; }
+        .merchant-stock-row strong, .merchant-stock-row small { display: block; }
+        .merchant-stock-row small { margin-top: 4px; color: #bac5b2; }
+        .merchant-stock-row .secondary-button { width: auto; min-width: 96px; margin: 0; }
+        .merchant-stock-row input { width: 64px; padding: 7px; border: 1px solid #53634d; background: #17231c; color: #f4f2e7; }
+        .merchant-stock-row button:disabled { opacity: .45; cursor: default; }
+        .merchant-sell-row input { width: 74px; padding: 7px; border: 1px solid #53634d; background: #17231c; color: #f4f2e7; }
+        .merchant-total { margin-top: 12px; color: #dfd2a4; }
+        @media (max-width: 700px) { .tech-branch-cards, .merchant-lists { grid-template-columns: 1fr; } }
         .slot-number { color: #d2a65b; font-size: 17px; }
         .slot-detail strong, .slot-detail small { display: block; }
         .slot-detail small, .slot-action { color: #a9b49f; font: 10px Arial, sans-serif; margin-top: 4px; }
@@ -816,7 +835,7 @@
             </div>
             <div class="action-buttons base-action-menu" id="baseActions" hidden>
                 <button class="btn-action" onclick="openCraftPanel()">🛠️ 製作</button>
-                <button class="btn-action" onclick="openResearchPanel()">🧪 研發</button>
+                <button class="btn-action" onclick="openResearchPanel()">🌳 科技樹</button>
                 <button class="btn-action" onclick="useInventoryItem()">🎒 使用道具</button>
                 <button class="btn-action" onclick="rest()">😴 休息</button>
                 <button class="btn-action" onclick="sleepAtBase()">🛏️ 睡眠</button>
@@ -909,6 +928,11 @@
                         <div class="attribute-label">經驗</div>
                         <div class="attribute-value" id="playerExp">0/100</div>
                     </div>
+                </div>
+
+                <div class="attribute-item" style="margin-bottom: 12px;">
+                    <div class="attribute-label">🪙 金幣</div>
+                    <div class="attribute-value" id="playerGold">0</div>
                 </div>
 
                 <div class="attribute-item" style="margin-bottom: 12px;">
@@ -1085,6 +1109,27 @@
     </section>
     <section class="overlay-layer" id="itemCatalogOverlay" hidden>
         <div class="overlay-panel collection-panel"><button class="close-button" onclick="closeOverlay('itemCatalogOverlay')" aria-label="關閉">×</button><p class="eyebrow">FIELD CRAFTING CATALOG</p><h2>道具與製作目錄</h2><div class="item-catalog-list" id="itemCatalogList"></div></div>
+    </section>
+    <section class="overlay-layer" id="techTreeOverlay" hidden>
+        <div class="overlay-panel collection-panel tech-tree-panel">
+            <button class="close-button" onclick="closeOverlay('techTreeOverlay')" aria-label="關閉">×</button>
+            <p class="eyebrow">FIELD TECHNOLOGY</p>
+            <h2>科技樹 <span id="techTreeLevel">0/30</span></h2>
+            <div class="tech-tree-summary"><strong>下一級成本</strong><p id="techTreeCost"></p></div>
+            <div class="tech-branch-cards" id="techBranchCards"></div>
+        </div>
+    </section>
+    <section class="overlay-layer" id="merchantOverlay" hidden>
+        <div class="overlay-panel collection-panel merchant-panel">
+            <button class="close-button" onclick="closeOverlay('merchantOverlay')" aria-label="關閉">×</button>
+            <p class="eyebrow">DAILY MERCHANT</p>
+            <h2>流動商人</h2>
+            <div class="merchant-summary">持有金幣：<strong id="merchantGold">0 金幣</strong>　·　每日 00:00 更新商品<br><strong id="merchantLocation">今日位置：讀取中</strong></div>
+            <div class="merchant-lists">
+                <section><h3>今日商品（素材可多購；高階商品限 1 個）</h3><div class="merchant-stock-list" id="merchantStockList"></div></section>
+                <section><h3>出售物品（每次最多 5 個）</h3><div class="merchant-sell-list" id="merchantSellList"></div><button class="secondary-button" onclick="sellSelectedItems()">出售所選物品</button></section>
+            </div>
+        </div>
     </section>
     <section class="overlay-layer" id="collectionOverlay" hidden>
         <div class="overlay-panel collection-panel"><button class="close-button" onclick="closeOverlay('collectionOverlay')" aria-label="關閉">×</button><p class="eyebrow">FIELD ARCHIVE</p><h2>收集圖鑑</h2><div class="collection-tabs"><button class="secondary-button" onclick="showCollection('art')">場景美術</button><button class="secondary-button" onclick="showCollection('gallery')">角色與場景</button><button class="secondary-button" onclick="showCollection('characters')">角色介紹</button></div><div class="collection-asset-gallery" id="collectionAssetGallery"></div><iframe title="角色與場景圖鑑" id="collectionFrame" src="gallery.html" hidden></iframe></div>

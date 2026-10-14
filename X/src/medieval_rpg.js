@@ -17,6 +17,10 @@ let gameState = {
     lastSurvivalTickRealMs: Date.now(),
     bases: {},  // 所有根據地 {baseId: baseData}
     currentBaseId: null,  // 當前根據地ID
+    merchantStockDate: null,
+    merchantStock: [],
+    merchantLocation: null,
+    merchantStockVersion: 2,
     discoveries: []
 };
 
@@ -129,6 +133,30 @@ const baseStructures = {
         description: '烹飪食物，保持溫暖',
         effect: 'cooking',
         requiredLevel: 1
+    },
+    advanced_cabin: {
+        name: '高級木屋', icon: '🏡', recipe: { '木材': 16, '植物纖維': 8, '皮革': 4 },
+        description: '舒適居所，睡眠疲勞恢復 +30%', effect: 'rest_bonus_30', requiredLevel: 1
+    },
+    waste_pit: {
+        name: '垃圾掩埋場', icon: '♻️', recipe: { '木材': 6, '小石子': 10, '黏土': 5 },
+        description: '整理營地環境，睡眠疲勞恢復 +10%', effect: 'rest_bonus_10', requiredLevel: 1
+    },
+    boiler: {
+        name: '製作鍋爐', icon: '♨️', recipe: { '木材': 10, '金屬碎片': 6, '小石子': 8 },
+        description: '提升製作效率，製作行動消耗減少', effect: 'craft_cost_reduction', requiredLevel: 1
+    },
+    desalination_tower: {
+        name: '海水淨化塔', icon: '🚰', recipe: { '木材': 10, '金屬碎片': 8, '水晶碎片': 3 },
+        description: '煮製海水可取得淡水與鹽', effect: 'advanced_purifier', requiredLevel: 1
+    },
+    smokehouse: {
+        name: '煙燻工坊', icon: '🏚️', recipe: { '木材': 12, '金屬碎片': 4, '精纖植物纖維': 5 },
+        description: '提升料理保存與成品品質', effect: 'food_quality', requiredLevel: 1
+    },
+    master_kitchen: {
+        name: '精製廚房', icon: '🍲', recipe: { '木材': 14, '金屬碎片': 8, '古代核心': 2 },
+        description: '高級料理的專屬設備', effect: 'master_cooking', requiredLevel: 1
     }
 };
 // ============= 場景數據庫 =============
@@ -320,9 +348,9 @@ const scenes = {
     }
 };
 
-// 以原始 12 個場景為模板擴展成 12 x 10 的連通地圖，共 120 個可探索位置。
-const mapColumns = 12;
-const mapRows = 10;
+// 以原始場景為模板擴展成 100 x 100 的連通地圖，共 10,000 個可探索位置。
+const mapColumns = 100;
+const mapRows = 100;
 const expansionAreas = ['北境林地', '東部河谷', '南方草原', '西部山脊', '迷霧濕地', '遠岸海灣', '古跡邊疆', '高原腹地', '遠方荒野'];
 const mapTemplates = Object.keys(scenes).map(key => [key, JSON.parse(JSON.stringify(scenes[key]))]);
 const originalSceneCount = mapTemplates.length;
@@ -330,7 +358,7 @@ const expandedSceneKeys = Object.keys(scenes);
 
 for (let index = originalSceneCount; index < mapColumns * mapRows; index++) {
     const templateIndex = (index - originalSceneCount) % mapTemplates.length;
-    const areaIndex = Math.floor((index - originalSceneCount) / mapTemplates.length);
+    const areaIndex = Math.floor((index - originalSceneCount) / mapTemplates.length) % expansionAreas.length;
     const [templateKey, template] = mapTemplates[templateIndex];
     const sceneKey = `expanded_${String(index - originalSceneCount + 1).padStart(3, '0')}`;
     scenes[sceneKey] = {
@@ -361,7 +389,10 @@ const itemRecipes = {
     antidote: { name: '解毒藥', icon: '🧪', recipe: { '草藥': 2, '可飲用水': 1 }, description: '解除中毒狀態' },
     candle: { name: '蠟燭', icon: '🕯️', recipe: { '植物纖維': 2, '火種': 1 }, description: '照亮黑暗洞穴' },
     torch: { name: '火把', icon: '🔦', recipe: { '木材': 1, '植物纖維': 1, '火種': 1 }, description: '可攜式照明工具' },
-    spear: { name: '石矛', icon: '🗡️', recipe: { '木材': 2, '小石子': 2, '植物纖維': 1 }, description: '簡易狩獵與防身工具' }
+    spear: { name: '石矛', icon: '🗡️', recipe: { '木材': 2, '小石子': 2, '植物纖維': 1 }, description: '簡易狩獵與防身工具' },
+    herbal_soup: { name: '草藥濃湯', icon: '🥣', recipe: { '草藥': 2, '生水': 1, '火種': 1 }, description: '恢復飽食與水分的料理' },
+    berry_tart: { name: '莓果塔', icon: '🥧', recipe: { '漿果': 2, '穀物': 1, '雞蛋': 1 }, description: '高品質甜點料理' },
+    salted_fish: { name: '鹽漬魚', icon: '🐟', recipe: { '新鮮魚': 1, '鹽': 1, '火種': 1 }, description: '保存良好的魚料理' }
 };
 
 const itemCatalog = [
@@ -389,7 +420,7 @@ const itemCatalog = [
     ['MAT-11', '玫瑰花', '花園採集的花材', '探索與製作素材', '花園探索'],
     ['MAT-12', '水晶', '天然晶體', '收藏與製作素材', '河谷探索'],
     ['MAT-13', '珍珠', '水域珍稀素材', '收藏與交易素材', '湖泊探索'],
-    ['MISC-01', '金幣', '通用貨幣', '交易使用', '探索與戰鬥獲得'],
+    ['MISC-01', '金幣', '交易用通用貨幣', '戰鬥勝利取得；死亡時損失總額 10%', '依怪物強度掉落／出售道具'],
     ['MISC-02', '治療藥水', '恢復用藥劑', '使用後恢復生命值', '村莊探索'],
     ['MISC-03', '麵包', '可攜式主食', '食用 +20 飽足度', '村莊探索'],
     ['MISC-04', '古老的鑰匙', '開啟古老門鎖的鑰匙', '進入特定區域', '山地探索'],
@@ -410,8 +441,71 @@ const itemCatalog = [
     ['STRUCT-05', '海水淨化設施', '海水處理設施', '可替代篝火煮製海水', '根據地製作：木材×4 + 小石子×4 + 金屬碎片×2'],
     ['STRUCT-06', '陶罐', '擴充根據地儲物容量', '存儲上限由 10000 提高至 20000 件', '根據地製作：黏土×3'],
     ['STRUCT-07', '製鹽工具', '製鹽設施', '煮海水時額外取得 1 鹽', '根據地製作，建造 Lv.2：小石子×5 + 木材×2'],
-    ['MISC-09', '貝殼', '海岸常見的硬殼素材', '探索與收藏素材', '海岸探索或怪物掉落']
+    ['MISC-09', '貝殼', '海岸常見的硬殼素材', '探索與收藏素材', '海岸探索或怪物掉落'],
+    ['MAT-14', '精纖植物纖維', '稀有強韌纖維', '高級設備與科技升級素材', '探索 Lv.5 以上搜尋／菁英怪掉落'],
+    ['MAT-15', '遠古樹脂', '凝結的古代樹液', '科技升級與高級木屋素材', '探索 Lv.10 以上搜尋／菁英怪掉落'],
+    ['MAT-16', '水晶碎片', '高密度晶體素材', '淨化塔與高階設備材料', '探索 Lv.15 以上搜尋／古代守衛掉落'],
+    ['MAT-17', '古代符文', '刻有古代記號的石片', '高階科技升級素材', '探索 Lv.20 以上搜尋／古代守衛掉落'],
+    ['MAT-18', '星隕金屬', '隕石中提煉的金屬', '頂級設備材料', '探索 Lv.25 以上搜尋／Boss 掉落'],
+    ['MAT-19', '古代核心', '古代機械的能量核心', '最高級設備與科技升級素材', '探索 Lv.30 搜尋／Boss 掉落'],
+    ['MAT-20', '狼王之牙', '菁英狼王的獠牙', '高級武器與交易素材', '菁英狼王掉落'],
+    ['MAT-21', '巨獸皮', '荒野巨熊的厚實皮革', '高階防具與設備材料', '荒野巨熊掉落'],
+    ['MAT-22', '龍晶', '深淵巨龍凝結的晶體', '頂級製作素材', '深淵巨龍掉落'],
+    ['FOOD-08', '神秘料理', '商人不定期販售的未知料理', '食用 +35 飽食度；品質可提升效果', '流動商人每日特別商品'],
+    ['BLUEPRINT', '神秘圖紙', '記錄特殊設備、道具或料理的圖紙', '使用後學會對應製作配方', '流動商人每日特別商品']
 ];
+
+const technologyBranches = {
+    gathering: {
+        name: '採集擅長',
+        perk: rank => `額外採集機率 ${Math.round(rank / 30 * 100)}%；優良品質機率 ${Math.round(rank / 30 * 100)}%`
+    },
+    combat: {
+        name: '戰鬥擅長',
+        perk: rank => `攻擊倍率 ×${getTechDamageMultiplier(rank).toFixed(1)}；承受傷害 -${Math.min(45, rank * 1.5)}%`
+    },
+    crafting: {
+        name: '製作擅長',
+        perk: rank => `製作品質效果 +${Math.round(rank / 30 * 100)}%；製作行動成本逐步降低`
+    }
+};
+
+const techMaterialTiers = [
+    ['植物纖維', '小石子'], ['皮革', '黏土'], ['礦石', '水晶碎片'],
+    ['金屬碎片', '珍珠'], ['遠古樹脂', '獸王核心'], ['星隕金屬', '古代核心']
+];
+
+const blueprintCatalog = {
+    advanced_cabin: { name: '高級木屋', type: 'structure', techRank: 5 },
+    waste_pit: { name: '垃圾掩埋場', type: 'structure', techRank: 10 },
+    boiler: { name: '製作鍋爐', type: 'structure', techRank: 15 },
+    desalination_tower: { name: '海水淨化塔', type: 'structure', techRank: 20 },
+    smokehouse: { name: '煙燻工坊', type: 'structure', techRank: 25 },
+    master_kitchen: { name: '精製廚房', type: 'structure', techRank: 30 },
+    herbal_soup: { name: '草藥濃湯', type: 'item', techRank: 3 },
+    berry_tart: { name: '莓果塔', type: 'item', techRank: 12 },
+    salted_fish: { name: '鹽漬魚', type: 'item', techRank: 22 }
+};
+
+const merchantCatalog = [
+    { item: '麵包', price: 18, minQuantity: 2, maxQuantity: 5 },
+    { item: '漿果', price: 6, minQuantity: 4, maxQuantity: 9 },
+    { item: '火種', price: 10, minQuantity: 3, maxQuantity: 7 },
+    { item: '木材', price: 9, minQuantity: 4, maxQuantity: 10 },
+    { item: '植物纖維', price: 6, minQuantity: 4, maxQuantity: 10 },
+    { item: '草藥', price: 14, minQuantity: 2, maxQuantity: 6 },
+    { item: '治療藥水', price: 45, minQuantity: 1, maxQuantity: 1 },
+    { item: '水晶碎片', price: 85, minQuantity: 1, maxQuantity: 1 }
+];
+
+const sellPrices = {
+    木材: 6, 小石子: 4, 植物纖維: 4, 火種: 8, 草藥: 10, 蘑菇: 8, 漿果: 5, 野生漿果: 5,
+    皮革: 18, 礦石: 22, 金屬碎片: 30, 黏土: 10, 新鮮魚: 16, 穀物: 8, 雞蛋: 10,
+    玫瑰花: 15, 水晶: 35, 珍珠: 55, 鹽: 8, 生肉: 12, 熟肉: 24, 麵包: 18,
+    治療藥水: 35, 遠古樹脂: 55, 水晶碎片: 65, 獸王核心: 90, 星隕金屬: 120,
+    古代核心: 180, 精纖植物纖維: 45, 精製皮革: 60, 古代符文: 160, 神秘料理: 60,
+    狼王之牙: 45, 巨獸皮: 75, 龍晶: 260
+};
 
 // Each scene can override these tables to tune encounters, XP and material drops.
 scenes.forest.exploreEncounterChance = 1 / 10;
@@ -551,6 +645,22 @@ const enemyDatabase = {
         crit: 18,
         element: 'water',
         level: 3
+    },
+    '菁英狼王': {
+        emoji: '🐺', hp: 125, attack: 30, defense: 14, speed: 19, crit: 28,
+        element: 'wind', level: 8, drops: ['狼王之牙', '精製皮革', '遠古樹脂']
+    },
+    '荒野巨熊': {
+        emoji: '🐻', hp: 180, attack: 38, defense: 20, speed: 10, crit: 20,
+        element: 'earth', level: 10, drops: ['巨獸皮', '獸王核心', '精纖植物纖維']
+    },
+    '古代守衛': {
+        emoji: '🗿', hp: 260, attack: 48, defense: 32, speed: 12, crit: 18,
+        element: 'earth', level: 15, drops: ['古代核心', '星隕金屬', '古代符文']
+    },
+    '深淵巨龍': {
+        emoji: '🐉', hp: 420, attack: 70, defense: 45, speed: 18, crit: 30,
+        element: 'fire', level: 30, boss: true, drops: ['龍晶', '古代核心', '星隕金屬']
     }
 };
 
@@ -579,7 +689,11 @@ let player = {
     critDmg: 150,
     exp: 0,
     maxExp: 100,
+    gold: 0,
     inventory: ['地圖'],
+    inventoryQuality: [0],
+    techTree: { level: 0, gathering: 0, combat: 0, crafting: 0 },
+    unlockedBlueprints: [],
     equipment: {
         weapon: '鐵劍',
         armor: '皮盾'
@@ -634,6 +748,7 @@ let player = {
 
 const initialPlayerData = JSON.parse(JSON.stringify(player));
 const saveStorageKey = 'wilderness-survival-save-slots-v1';
+const merchantStorageKey = 'wilderness-survival-merchant-daily-v1';
 const settingsStorageKey = 'wilderness-survival-settings-v1';
 const menuMusicSettingsKey = 'wilderness-survival-menu-music-v1';
 let soundEnabled = JSON.parse(localStorage.getItem(settingsStorageKey) || '{"soundEnabled":false}').soundEnabled;
@@ -688,7 +803,9 @@ function createStartingBase(biome, location) {
         type,
         location,
         structures: ['grass_mat', 'fireplace'],
+        structureQuality: {},
         storage: ['木材', '火種'],
+        storageQuality: [0, 0],
         createdDay: gameState.gameDay,
         isStarter: true
     };
@@ -802,15 +919,34 @@ function saveToSlot(slot) {
 function loadFromSlot(slot) {
     const save = getSaveSlots().find(entry => entry.slot === slot);
     if (!save) return;
-    player = save.player;
+    player = { ...JSON.parse(JSON.stringify(initialPlayerData)), ...(save.player || {}) };
     player.dehydrationGameMs = Number(player.dehydrationGameMs) || 0;
     player.starvationGameMs = Number(player.starvationGameMs) || 0;
     player.isPoisoned = Boolean(player.isPoisoned);
     player.poisonProgressMs = Number(player.poisonProgressMs) || 0;
     player.inventory = (player.inventory || []).map(item => item === '淡水' ? '可飲用水' : item);
+    const legacyGold = player.inventory.reduce((total, item) => {
+        const match = /^金幣(?:\s*x(\d+))?$/.exec(item);
+        return total + (match ? Number(match[1] || 1) : 0);
+    }, 0);
+    player.inventory = player.inventory.filter(item => !/^金幣(?:\s*x\d+)?$/.test(item));
+    player.gold = Math.max(0, Number(player.gold) || 0) + legacyGold;
+    player.inventoryQuality = Array.isArray(player.inventoryQuality) ? player.inventoryQuality.slice(0, player.inventory.length) : [];
+    while (player.inventoryQuality.length < player.inventory.length) player.inventoryQuality.push(0);
+    player.techTree = { level: 0, gathering: 0, combat: 0, crafting: 0, ...(player.techTree || {}) };
+    player.unlockedBlueprints = Array.isArray(player.unlockedBlueprints) ? player.unlockedBlueprints : [];
     player.currentBackpackUsage = player.inventory?.length || 0;
     if (!['jungle', 'island', 'grassland'].includes(player.biome)) player.biome = 'jungle';
     Object.assign(gameState, save.gameState);
+    gameState.merchantStock = Array.isArray(gameState.merchantStock) ? gameState.merchantStock : [];
+    gameState.merchantStockDate = gameState.merchantStockDate || null;
+    gameState.merchantLocation = gameState.merchantLocation || null;
+    gameState.merchantStockVersion = Number(save.gameState?.merchantStockVersion) || 1;
+    Object.values(gameState.bases || {}).forEach(base => {
+        base.structureQuality = base.structureQuality || {};
+        base.storageQuality = Array.isArray(base.storageQuality) ? base.storageQuality.slice(0, (base.storage || []).length) : [];
+        while (base.storageQuality.length < (base.storage || []).length) base.storageQuality.push(0);
+    });
     const now = Date.now();
     gameState.gameClockStartRealMs = now;
     gameState.gameClockStartMs = now;
@@ -978,33 +1114,44 @@ function gatherAtScene() {
     }
     const waterItem = scene.waterSource === 'fresh' ? '生水' : scene.waterSource === 'sea' ? '海水' : null;
     const fishItems = (scene.items || []).filter(item => item === '新鮮魚');
-    const targetItems = waterItem ? [waterItem, ...fishItems] : scene.canFish || fishItems.length ? ['新鮮魚'] : scene.items;
+    const baseItems = waterItem ? [waterItem, ...fishItems] : scene.canFish || fishItems.length ? ['新鮮魚'] : scene.items;
+    const targetItems = [...(baseItems || []), ...getAvailableAdvancedMaterials()];
     if (!targetItems?.length) {
         showMessage('這裡沒有可採集的素材。');
         return;
     }
     if (!consumeAction(1)) return;
     const item = targetItems[Math.floor(Math.random() * targetItems.length)];
-    if (!addInventoryItem(item)) {
+    const extraYieldChance = getTechBranchRank('gathering') / 30;
+    const requestedQuantity = 1 + (Math.random() < extraYieldChance ? 1 : 0);
+    const quality = rollGatheringQuality();
+    let gathered = 0;
+    for (let index = 0; index < requestedQuantity; index++) {
+        if (!addInventoryItem(item, quality)) break;
+        gathered++;
+    }
+    if (!gathered) {
         showMessage('背包已滿，無法收下發現的素材。');
         return;
     }
-    showMessage(`${scene.canFish || scene.items?.includes('新鮮魚') ? '🎣' : '🌿'} 獲得素材：${item}。`);
+    const qualityLabel = quality > 0 ? `（優良品質 +${Math.round(quality * 100)}%）` : '';
+    showMessage(`${scene.canFish || scene.items?.includes('新鮮魚') ? '🎣' : '🌿'} 獲得素材：${item} ×${gathered}${qualityLabel}。`);
     updateUI();
 }
 
 function useInventoryItem() {
-    const usable = [...new Set(player.inventory.filter(item => ['生肉', '熟肉', '漿果', '野生漿果', '生水', '可飲用水', '治療藥水', '解毒藥', '麵包'].includes(item)))];
+    const usable = [...new Set(player.inventory.filter(item => ['生肉', '熟肉', '漿果', '野生漿果', '生水', '可飲用水', '治療藥水', '解毒藥', '麵包', '神秘料理'].includes(item) || item.startsWith('圖紙：')))];
     if (!usable.length) {
         showMessage('背包裡沒有可立即使用的食物、飲水或藥品。');
         return;
     }
     const choice = prompt(`輸入要使用的物品名稱：\n${usable.join('、')}`, usable[0]);
     if (!choice || !usable.includes(choice)) return;
+    if (choice.startsWith('圖紙：')) return learnBlueprint(choice);
     if (['生水', '可飲用水'].includes(choice)) return drinkWater(choice);
-    if (['生肉', '熟肉', '漿果', '野生漿果', '麵包'].includes(choice)) return useFood(choice);
+    if (['生肉', '熟肉', '漿果', '野生漿果', '麵包', '神秘料理'].includes(choice)) return useFood(choice);
     if (!consumeAction(1)) return;
-    player.inventory.splice(player.inventory.indexOf(choice), 1);
+    removeInventoryAt(player.inventory.indexOf(choice));
     if (choice === '解毒藥') {
         player.isPoisoned = false;
         player.poisonProgressMs = 0;
@@ -1017,8 +1164,8 @@ function useInventoryItem() {
 
 function openCraftPanel() {
     if (!player.isAtBase) return;
-    const structures = Object.entries(baseStructures).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
-    const items = Object.entries(itemRecipes).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
+    const structures = Object.entries(baseStructures).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
+    const items = Object.entries(itemRecipes).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
     const id = prompt(`輸入要製作的代碼（僅限根據地）：\n${[...structures, ...items].join('\n')}`, 'wood_bed');
     if (!id) return;
     if (baseStructures[id]) constructStructure(id);
@@ -1033,6 +1180,10 @@ function formatRecipe(recipe) {
 function craftItem(itemId) {
     const recipe = itemRecipes[itemId];
     if (!player.isAtBase || !gameState.currentBaseId || !recipe) return;
+    if (!isBlueprintUnlocked(itemId)) {
+        showMessage('尚未取得這項配方圖紙。');
+        return;
+    }
     if (!hasItems(recipe.recipe)) {
         showMessage(`素材不足，需要：${formatRecipe(recipe.recipe)}。`);
         return;
@@ -1041,9 +1192,12 @@ function craftItem(itemId) {
         showMessage('背包空間不足，無法收下製作成品。');
         return;
     }
-    if (!consumeAction(2)) return;
-    consumeInventoryItems(recipe.recipe);
-    addInventoryItem(recipe.name);
+    const base = gameState.bases[gameState.currentBaseId];
+    const actionCost = base.structures.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 2;
+    if (!consumeAction(actionCost)) return;
+    const inputQuality = consumeInventoryItems(recipe.recipe);
+    const outputQuality = getCraftedQuality(inputQuality + (base.structures.includes('smokehouse') ? 0.1 : 0));
+    addInventoryItem(recipe.name, outputQuality);
     addSkillExp('construction', 10);
     showMessage(`製作完成：${recipe.icon} ${recipe.name}。`);
     updateUI();
@@ -1065,12 +1219,280 @@ function openItemCatalog() {
     document.getElementById('itemCatalogOverlay').hidden = false;
 }
 
+function getTechPerkDescription(branch, rank) {
+    if (branch === 'gathering') {
+        const bonus = Math.round(rank / 30 * 100);
+        return `額外產量機率 ${bonus}%，優良品質機率 ${bonus}%`;
+    }
+    if (branch === 'combat') {
+        return `戰鬥攻擊倍率 ×${getTechDamageMultiplier(rank).toFixed(1)}，受到傷害降低 ${Math.min(45, rank * 1.5)}%`;
+    }
+    const blueprint = Object.entries(blueprintCatalog).find(([, data]) => data.type === 'structure' && data.techRank === rank);
+    return blueprint
+        ? `製作品質效果 +${Math.round(rank / 30 * 100)}%，解鎖藍圖：${blueprint[1].name}`
+        : `製作品質效果 +${Math.round(rank / 30 * 100)}%，製作行動成本依科技級別降低`;
+}
+
+function renderTechTree() {
+    const level = Math.min(30, Number(player.techTree.level) || 0);
+    const levelElement = document.getElementById('techTreeLevel');
+    const costElement = document.getElementById('techTreeCost');
+    const list = document.getElementById('techBranchCards');
+    if (!levelElement || !costElement || !list) return;
+    levelElement.textContent = `${level}/30`;
+    const cost = getTechUpgradeCost(level + 1);
+    costElement.textContent = level >= 30
+        ? '科技樹已達最高等級。'
+        : `下一級費用：${cost.gold} 金幣 + ${cost.material}×${cost.quantity}（總等級 ${level + 1}）`;
+    list.replaceChildren();
+
+    Object.entries(technologyBranches).forEach(([branch, data]) => {
+        const rank = getTechBranchRank(branch);
+        const card = document.createElement('article');
+        card.className = 'tech-path-card';
+        const heading = document.createElement('strong');
+        heading.textContent = `${data.name} · Lv.${rank}/30`;
+        const current = document.createElement('p');
+        current.textContent = rank ? `目前：${getTechPerkDescription(branch, rank)}` : '尚未投入科技點數。';
+        const next = document.createElement('small');
+        next.textContent = level >= 30 ? '科技樹已滿級' : `下級：${getTechPerkDescription(branch, rank + 1)}`;
+        const button = document.createElement('button');
+        button.className = 'secondary-button';
+        button.textContent = `選擇${data.name}`;
+        button.disabled = level >= 30 || rank >= 30;
+        button.onclick = () => upgradeTechnology(branch);
+        card.append(heading, current, next, button);
+        list.appendChild(card);
+    });
+}
+
+function upgradeTechnology(branch) {
+    if (!player.isAtBase || !gameState.currentBaseId) {
+        showMessage('科技升級只能在根據地進行。');
+        return;
+    }
+    if (!technologyBranches[branch] || player.techTree.level >= 30 || getTechBranchRank(branch) >= 30) return;
+    const cost = getTechUpgradeCost(player.techTree.level + 1);
+    if (player.gold < cost.gold) {
+        showMessage(`金幣不足，需要 ${cost.gold} 金幣。`);
+        return;
+    }
+    if (!hasItems({ [cost.material]: cost.quantity })) {
+        showMessage(`素材不足，需要 ${cost.material}×${cost.quantity}。`);
+        return;
+    }
+
+    consumeInventoryItems({ [cost.material]: cost.quantity });
+    player.gold -= cost.gold;
+    player.techTree.level++;
+    player.techTree[branch]++;
+    const rank = player.techTree[branch];
+    const unlocked = Object.entries(blueprintCatalog)
+        .filter(([, data]) => data.type === 'structure' && branch === 'crafting' && data.techRank === rank)
+        .map(([id]) => id);
+    unlocked.forEach(id => {
+        if (!player.unlockedBlueprints.includes(id)) player.unlockedBlueprints.push(id);
+    });
+    addDiscovery(`科技升級：${technologyBranches[branch].name} Lv.${rank}`);
+    updateUI();
+    renderTechTree();
+}
+
 function openResearchPanel() {
-    if (!player.isAtBase) return;
-    if (!consumeAction(2)) return;
-    player.skills.research += 1;
-    addDiscovery('在營地完成一次野外研究');
-    showMessage(`研究完成。研發技能提升至 Lv.${player.skills.research}。`);
+    if (!player.isAtBase) {
+        showMessage('科技升級只能在根據地進行。');
+        return;
+    }
+    renderTechTree();
+    document.getElementById('techTreeOverlay').hidden = false;
+}
+
+function getLocalDateKey(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function ensureMerchantStock() {
+    const today = getLocalDateKey();
+    const merchantLocations = ['market', 'village', 'farm', 'garden', 'river'];
+    let saved = null;
+    try {
+        saved = JSON.parse(localStorage.getItem(merchantStorageKey) || 'null');
+    } catch {
+        saved = null;
+    }
+    if (saved?.version === 2 && saved.date === today && Array.isArray(saved.stock) && saved.stock.length === 5 && merchantLocations.includes(saved.location)) {
+        gameState.merchantStockDate = today;
+        gameState.merchantStock = saved.stock;
+        gameState.merchantLocation = saved.location;
+        gameState.merchantStockVersion = 2;
+        return gameState;
+    }
+    if (gameState.merchantStockDate === today && gameState.merchantStockVersion === 2 && gameState.merchantStock?.length === 5 && merchantLocations.includes(gameState.merchantLocation)) {
+        localStorage.setItem(merchantStorageKey, JSON.stringify({ version: 2, date: today, location: gameState.merchantLocation, stock: gameState.merchantStock }));
+        return gameState;
+    }
+
+    const previousLocation = saved?.location || gameState.merchantLocation;
+    const locationOptions = merchantLocations.filter(location => location !== previousLocation);
+    gameState.merchantLocation = locationOptions[Math.floor(Math.random() * locationOptions.length)] || merchantLocations[0];
+    const shuffled = [...merchantCatalog].sort(() => Math.random() - 0.5).slice(0, 4).map(entry => ({
+        ...entry,
+        quantity: entry.minQuantity + Math.floor(Math.random() * (entry.maxQuantity - entry.minQuantity + 1))
+    }));
+    const mystery = Math.random() < 0.5;
+    let special;
+    if (mystery) {
+        special = { item: '神秘料理', price: 70 };
+    } else {
+        const blueprintIds = Object.keys(blueprintCatalog);
+        const blueprintId = blueprintIds[Math.floor(Math.random() * blueprintIds.length)];
+        const blueprint = blueprintCatalog[blueprintId];
+        special = { item: `圖紙：${blueprint.name}`, price: 180 + blueprint.techRank * 35, blueprintId };
+    }
+    gameState.merchantStock = [...shuffled, { ...special, quantity: 1 }];
+    gameState.merchantStockDate = today;
+    gameState.merchantStockVersion = 2;
+    localStorage.setItem(merchantStorageKey, JSON.stringify({ version: 2, date: today, location: gameState.merchantLocation, stock: gameState.merchantStock }));
+    return gameState;
+}
+
+function openMerchantShop() {
+    ensureMerchantStock();
+    renderMerchantShop();
+    document.getElementById('merchantOverlay').hidden = false;
+}
+
+function renderMerchantShop() {
+    ensureMerchantStock();
+    const goldElement = document.getElementById('merchantGold');
+    const stockList = document.getElementById('merchantStockList');
+    const sellList = document.getElementById('merchantSellList');
+    if (!stockList || !sellList) return;
+    if (goldElement) goldElement.textContent = `${player.gold} 金幣`;
+    const locationElement = document.getElementById('merchantLocation');
+    if (locationElement) locationElement.textContent = `今日位置：${scenes[gameState.merchantLocation]?.name || '未知地點'}`;
+
+    stockList.replaceChildren();
+    gameState.merchantStock.forEach((stock, index) => {
+        const row = document.createElement('article');
+        row.className = 'merchant-stock-row';
+        const detail = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = stock.item;
+        const price = document.createElement('small');
+        price.textContent = `${stock.price} 金幣 · 庫存 ${stock.quantity}`;
+        detail.append(name, price);
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.min = '1';
+        quantityInput.max = String(stock.quantity);
+        quantityInput.value = stock.quantity > 0 ? '1' : '0';
+        quantityInput.disabled = stock.quantity <= 0;
+        quantityInput.dataset.buyIndex = String(index);
+        quantityInput.setAttribute('aria-label', `${stock.item} 購買數量`);
+        const button = document.createElement('button');
+        button.className = 'secondary-button';
+        button.textContent = stock.quantity ? '購買' : '已售完';
+        button.disabled = stock.quantity <= 0;
+        button.onclick = () => buyMerchantItem(index, quantityInput.value);
+        row.append(detail, quantityInput, button);
+        stockList.appendChild(row);
+    });
+
+    sellList.replaceChildren();
+    const sellableItems = [...new Set(player.inventory)].filter(item => item !== '地圖' && getItemSellPrice(item) > 0);
+    if (!sellableItems.length) {
+        const empty = document.createElement('p');
+        empty.textContent = '背包裡沒有可出售的物品。';
+        sellList.appendChild(empty);
+    }
+    sellableItems.forEach(item => {
+        const count = player.inventory.filter(owned => owned === item).length;
+        const row = document.createElement('label');
+        row.className = 'merchant-sell-row';
+        const detail = document.createElement('span');
+        detail.textContent = `${item} ×${count} · ${getItemSellPrice(item)} 金幣／個`;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = String(Math.min(count, 5));
+        input.value = '0';
+        input.dataset.sellItem = item;
+        row.append(detail, input);
+        sellList.appendChild(row);
+    });
+}
+
+function getItemSellPrice(item) {
+    if (item.startsWith('圖紙：')) return 100;
+    return sellPrices[item] || 0;
+}
+
+function buyMerchantItem(index, requestedQuantity = 1) {
+    ensureMerchantStock();
+    const stock = gameState.merchantStock[index];
+    if (!stock || stock.quantity <= 0) return;
+    const quantity = Math.floor(Number(requestedQuantity));
+    if (!Number.isFinite(quantity) || quantity < 1 || quantity > stock.quantity) {
+        showMessage(`購買數量需介於 1 到 ${stock.quantity} 個。`);
+        return;
+    }
+    const totalPrice = stock.price * quantity;
+    if (player.gold < totalPrice) {
+        showMessage(`金幣不足，需要 ${totalPrice} 金幣。`);
+        return;
+    }
+    const freeSlots = player.backpackCapacity - player.inventory.length;
+    if (freeSlots < quantity) {
+        showMessage(`背包空間不足，需要 ${quantity} 格，目前只剩 ${freeSlots} 格。`);
+        return;
+    }
+    player.gold -= totalPrice;
+    for (let count = 0; count < quantity; count++) addInventoryItem(stock.item);
+    stock.quantity -= quantity;
+    addDiscovery(`商人購買：${stock.item} ×${quantity}`);
+    updateUI();
+    renderMerchantShop();
+}
+
+function sellSelectedItems() {
+    const inputs = [...document.querySelectorAll('#merchantSellList [data-sell-item]')];
+    const selected = inputs.map(input => ({ item: input.dataset.sellItem, quantity: Math.max(0, Number(input.value) || 0) })).filter(entry => entry.quantity > 0);
+    const totalQuantity = selected.reduce((sum, entry) => sum + entry.quantity, 0);
+    if (!totalQuantity) {
+        showMessage('請先選擇要出售的物品數量。');
+        return;
+    }
+    if (totalQuantity > 5) {
+        showMessage('每次最多只能出售 5 個物品。');
+        return;
+    }
+
+    let earned = 0;
+    for (const entry of selected) {
+        for (let count = 0; count < entry.quantity; count++) {
+            const index = player.inventory.indexOf(entry.item);
+            if (index < 0) break;
+            const quality = getInventoryQuality(index);
+            removeInventoryAt(index);
+            earned += Math.round(getItemSellPrice(entry.item) * (1 + quality));
+        }
+    }
+    player.gold += earned;
+    addDiscovery(`出售物品：獲得 ${earned} 金幣`);
+    updateUI();
+    renderMerchantShop();
+}
+
+function learnBlueprint(itemName) {
+    const blueprintId = Object.keys(blueprintCatalog).find(id => `圖紙：${blueprintCatalog[id].name}` === itemName);
+    if (!blueprintId) return showMessage('這張圖紙無法辨識。');
+    if (player.unlockedBlueprints.includes(blueprintId) || isBlueprintUnlocked(blueprintId)) {
+        return showMessage(`已經學會「${blueprintCatalog[blueprintId].name}」的製作方法。`);
+    }
+    removeInventoryAt(player.inventory.indexOf(itemName));
+    player.unlockedBlueprints.push(blueprintId);
+    showMessage(`學會圖紙：${blueprintCatalog[blueprintId].name}。`);
     updateUI();
 }
 
@@ -1090,6 +1512,10 @@ function startTimeSystem() {
         checkHungerSystem();
         checkPeriodTransition();
         checkActionPointRecovery();
+        const stockDate = gameState.merchantStockDate;
+        ensureMerchantStock();
+        const merchantOverlay = document.getElementById('merchantOverlay');
+        if (merchantOverlay && !merchantOverlay.hidden && stockDate !== gameState.merchantStockDate) renderMerchantShop();
         updateUI();
     }, 10000);
 }
@@ -1198,6 +1624,13 @@ function consumeNeedsOnly(fatigue = 0) {
 
 function pickSceneEnemy(scene) {
     const available = (scene.enemies || []).filter(name => enemyDatabase[name]);
+    const combatRank = getTechBranchRank('combat');
+    const advancedEnemies = [
+        [5, '菁英狼王'], [10, '荒野巨熊'], [15, '古代守衛'], [25, '深淵巨龍']
+    ].filter(([required]) => combatRank >= required).map(([, name]) => name);
+    if (advancedEnemies.length && scene.type !== 'safe' && Math.random() < Math.min(0.35, combatRank / 100)) {
+        return advancedEnemies[Math.floor(Math.random() * advancedEnemies.length)];
+    }
     return available[Math.floor(Math.random() * available.length)] || null;
 }
 
@@ -1207,13 +1640,35 @@ function hasItems(required) {
     );
 }
 
+function ensureInventoryQuality() {
+    if (!Array.isArray(player.inventoryQuality)) player.inventoryQuality = [];
+    player.inventoryQuality = player.inventoryQuality.slice(0, player.inventory.length);
+    while (player.inventoryQuality.length < player.inventory.length) player.inventoryQuality.push(0);
+}
+
+function removeInventoryAt(index) {
+    if (index < 0 || index >= player.inventory.length) return null;
+    ensureInventoryQuality();
+    const item = player.inventory.splice(index, 1)[0];
+    const quality = player.inventoryQuality.splice(index, 1)[0] || 0;
+    player.currentBackpackUsage = player.inventory.length;
+    return { item, quality };
+}
+
 function consumeInventoryItems(required) {
+    let qualityTotal = 0;
+    let removedCount = 0;
     for (const [item, quantity] of Object.entries(required)) {
         for (let count = 0; count < quantity; count++) {
-            player.inventory.splice(player.inventory.indexOf(item), 1);
+            const removed = removeInventoryAt(player.inventory.indexOf(item));
+            if (removed) {
+                qualityTotal += removed.quality;
+                removedCount++;
+            }
         }
     }
     player.currentBackpackUsage = player.inventory.length;
+    return removedCount ? qualityTotal / removedCount : 0;
 }
 
 function poisonPlayer(reason) {
@@ -1222,11 +1677,75 @@ function poisonPlayer(reason) {
     addDiscovery(`中毒：${reason}`);
 }
 
-function addInventoryItem(item) {
+function addInventoryItem(item, quality = 0) {
     if (player.inventory.length >= player.backpackCapacity) return false;
+    ensureInventoryQuality();
     player.inventory.push(item);
+    player.inventoryQuality.push(Math.max(0, Math.min(1, Number(quality) || 0)));
     player.currentBackpackUsage = player.inventory.length;
     return true;
+}
+
+function addBaseStorageItem(base, item, quality = 0) {
+    base.storage = Array.isArray(base.storage) ? base.storage : [];
+    base.storageQuality = Array.isArray(base.storageQuality) ? base.storageQuality : [];
+    base.storage.push(item);
+    base.storageQuality.push(Math.max(0, Math.min(1, Number(quality) || 0)));
+}
+
+function getInventoryQuality(index) {
+    ensureInventoryQuality();
+    return Math.max(0, Math.min(1, Number(player.inventoryQuality[index]) || 0));
+}
+
+function getTechBranchRank(branch) {
+    return Math.max(0, Math.min(30, Number(player.techTree?.[branch]) || 0));
+}
+
+function getGatheringQuality() {
+    const rank = getTechBranchRank('gathering');
+    return rank > 0 && Math.random() < rank / 30 ? rank / 30 : 0;
+}
+
+function getCraftedQuality(inputQuality = 0) {
+    return Math.max(0, Math.min(1, inputQuality + getTechBranchRank('crafting') / 30));
+}
+
+function getTechUpgradeCost(nextLevel = (Number(player.techTree?.level) || 0) + 1) {
+    const tier = Math.min(techMaterialTiers.length - 1, Math.floor((nextLevel - 1) / 5));
+    const materials = techMaterialTiers[tier];
+    return {
+        gold: 35 + nextLevel * nextLevel * 12,
+        material: materials[(nextLevel - 1) % materials.length],
+        quantity: 1 + Math.floor((nextLevel - 1) / 10)
+    };
+}
+
+function isBlueprintUnlocked(blueprintId) {
+    const blueprint = blueprintCatalog[blueprintId];
+    return !blueprint || player.unlockedBlueprints?.includes(blueprintId) || getTechBranchRank('crafting') >= blueprint.techRank;
+}
+
+function getAvailableAdvancedMaterials() {
+    const skill = Number(player.skills?.exploration) || 1;
+    return [
+        [5, '精纖植物纖維'], [10, '遠古樹脂'], [15, '水晶碎片'],
+        [20, '古代符文'], [25, '星隕金屬'], [30, '古代核心']
+    ].filter(([required]) => skill >= required).map(([, item]) => item);
+}
+
+function rollGatheringQuality() {
+    const rank = getTechBranchRank('gathering');
+    return rank > 0 && Math.random() < rank / 30 ? rank / 30 : 0;
+}
+
+function getTechDamageMultiplier(rank = getTechBranchRank('combat')) {
+    if (rank <= 15) return 1 + 11 * Math.pow(rank / 15, 3);
+    return 12 + 5 * ((rank - 15) / 15);
+}
+
+function getTechDamageReduction() {
+    return Math.min(0.45, getTechBranchRank('combat') * 0.015);
 }
 
 function hasLightSource(requiredItem) {
@@ -1303,11 +1822,14 @@ function move(direction) {
         return;
     }
 
-    if (!consumeAction(1)) return;
-
-    gameState.currentScene = nextSceneName;
+    const base = gameState.bases[gameState.currentBaseId];
+    const actionCost = base.structures.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 2;
+    if (!consumeAction(actionCost)) return;
+    const inputQuality = consumeInventoryItems(recipe.recipe);
+    const outputQuality = getCraftedQuality(inputQuality + (base.structures.includes('smokehouse') ? 0.1 : 0));
+    addInventoryItem(recipe.name, outputQuality);
     player.isAtBase = Boolean(player.baseLocation && nextSceneName === player.baseLocation);
-    showScene(nextSceneName);
+    showMessage(`製作完成：${recipe.icon} ${recipe.name}${outputQuality ? `（品質效果 +${Math.round(outputQuality * 100)}%）` : ''}。`);
 
     // 每次進入場景只檢查一次 1/20 機率，依目標場景的敵人設定。
     const entryKey = `${nextSceneName}:${Date.now()}`;
@@ -1333,7 +1855,10 @@ function getCurrentHourGMT8() {
  */
 function playerDeath(cause = '生存需求耗盡') {
     const lostItems = [...player.inventory];
+    const lostGold = Math.floor((Number(player.gold) || 0) * 0.1);
+    player.gold = Math.max(0, (Number(player.gold) || 0) - lostGold);
     player.inventory = [];
+    player.inventoryQuality = [];
     player.currentBackpackUsage = 0;
     player.hp = Math.floor(player.maxHp * 0.5);
     player.hunger = 50;
@@ -1349,7 +1874,7 @@ function playerDeath(cause = '生存需求耗盡') {
     document.getElementById('battleSection').classList.remove('active');
     gameState.lastSurvivalTickRealMs = Date.now();
     showScene(gameState.currentScene);
-    showMessage(`💀 你因【${cause}】倒下，醒來時已被送回根據地。身上可攜帶物品全數遺失：${lostItems.join('、') || '無'}。生命、飽食與水分已恢復一半。`);
+    showMessage(`💀 你因【${cause}】倒下，醒來時已被送回根據地。身上可攜帶物品全數遺失：${lostItems.join('、') || '無'}；金幣損失 ${lostGold}（總金幣 10%）。生命、飽食與水分已恢復一半。`);
     updateUI();
 }
 
@@ -1399,7 +1924,9 @@ function buildBase() {
         type: selectedType,
         location: baseTypes[selectedType].startingLocation || gameState.currentScene,
         structures: [],
+        structureQuality: {},
         storage: [],  // 根據地儲存空間
+        storageQuality: [],
         createdDay: gameState.gameDay
     };
     
@@ -1441,8 +1968,11 @@ function sleepAtBase() {
     }
 
     if (!consumeAction(3)) return;
-    const bedRecovery = currentBase.structures.reduce((best, structure) =>
+    const baseBedRecovery = currentBase.structures.reduce((best, structure) =>
         Math.max(best, ({ grass_mat: 40, wood_bed: 60, spring_bed: 80 })[structure] || 0), 20);
+    const restBonus = (currentBase.structures.includes('advanced_cabin') ? 0.3 : 0)
+        + (currentBase.structures.includes('waste_pit') ? 0.1 : 0);
+    const bedRecovery = Math.round(baseBedRecovery * (1 + restBonus));
     player.fatigue = Math.max(0, player.fatigue - bedRecovery);
     player.hp = Math.min(player.hp + 20, player.maxHp);
     player.hunger = Math.max(1, player.hunger);
@@ -1490,14 +2020,17 @@ function eatAtBase() {
     const selectedFood = foodItems[0];
     
     if (!consumeAction(1)) return;
-    const hungerGain = ({ 生肉: 10, 熟肉: 40, 漿果: 10, 野生漿果: 10, 麵包: 20, 新鮮魚: 20 })[selectedFood] || 0;
+    const foodIndex = currentBase.storage.indexOf(selectedFood);
+    const quality = Math.max(0, Number(currentBase.storageQuality?.[foodIndex]) || 0);
+    const hungerGain = Math.round((({ 生肉: 10, 熟肉: 40, 漿果: 10, 野生漿果: 10, 麵包: 20, 新鮮魚: 20, 神秘料理: 35 })[selectedFood] || 0) * (1 + quality));
     player.hunger = Math.min(player.hunger + hungerGain, player.maxHunger);
     if (selectedFood === '生肉' && Math.random() < gameRules.rawMeatPoisonChance) poisonPlayer('食用根據地儲存的生肉');
     
     // 移除已食用的食物
-    const index = currentBase.storage.indexOf(selectedFood);
+    const index = foodIndex;
     if (index > -1) {
         currentBase.storage.splice(index, 1);
+        currentBase.storageQuality?.splice(index, 1);
     }
     
     showMessage(`🍖 你吃了 ${selectedFood}。飽食度 +${hungerGain}${player.isPoisoned ? '，並已中毒' : ''}。`);
@@ -1511,9 +2044,10 @@ function useFood(itemName) {
         return;
     }
     if (!consumeAction(1)) return;
-    player.inventory.splice(itemIndex, 1);
-    player.currentBackpackUsage = player.inventory.length;
-    const hungerGain = ({ 生肉: 10, 熟肉: 40, 漿果: 10, 野生漿果: 10, 麵包: 20, 新鮮魚: 20 })[itemName] || 0;
+    const quality = getInventoryQuality(itemIndex);
+    removeInventoryAt(itemIndex);
+    const baseHungerGain = ({ 生肉: 10, 熟肉: 40, 漿果: 10, 野生漿果: 10, 麵包: 20, 新鮮魚: 20, 神秘料理: 35 })[itemName] || 0;
+    const hungerGain = Math.round(baseHungerGain * (1 + quality));
     player.hunger = Math.min(player.maxHunger, player.hunger + hungerGain);
     if (itemName === '生肉') {
         if (Math.random() < gameRules.rawMeatPoisonChance) {
@@ -1534,15 +2068,17 @@ function cookFood() {
         return;
     }
     const base = gameState.bases[gameState.currentBaseId];
-    if (!base.structures.includes('fireplace')) {
-        showMessage('⚠️ 需要先建造篝火才能料理。');
+    const hasFireplace = base.structures.includes('fireplace');
+    const hasWaterPlant = base.structures.includes('purifier') || base.structures.includes('desalination_tower');
+    if (!hasFireplace && !hasWaterPlant) {
+        showMessage('⚠️ 料理需要篝火；淨化海水可使用海水淨化設施。');
         return;
     }
     const choices = [
         ['肉', '料理熟肉：生肉×1 + 火種×1'],
-        ['水', '煮沸生水：生水×1 + 火種×1'],
-        ['海', '煮製海水：海水×1 + 火種×1（獲得可飲用水與鹽）']
-    ];
+        ...(hasFireplace ? [['水', '煮沸生水：生水×1 + 火種×1']] : []),
+        ...(hasFireplace || hasWaterPlant ? [['海', '煮製海水：海水×1 + 火種×1（獲得可飲用水與鹽）']] : [])
+    ].filter(([key]) => key !== '肉' || hasFireplace);
     const choice = prompt(`選擇料理內容：\n${choices.map(([key, label]) => `${key}：${label}`).join('\n')}`, '肉');
     if (!choice) return;
     if (choice.startsWith('肉')) return cookAtBase('meat');
@@ -1560,7 +2096,7 @@ function cookAtBase(recipeKey) {
     const recipe = recipes[recipeKey];
     if (!recipe || !player.isAtBase || !gameState.currentBaseId) return;
     const base = gameState.bases[gameState.currentBaseId];
-    if (!base.structures.includes('fireplace') && !(recipeKey === 'seaWater' && base.structures.includes('purifier'))) {
+    if (!base.structures.includes('fireplace') && !(recipeKey === 'seaWater' && (base.structures.includes('purifier') || base.structures.includes('desalination_tower')))) {
         showMessage('需要根據地篝火；煮製海水也可使用海水淨化設施。');
         return;
     }
@@ -1574,13 +2110,17 @@ function cookAtBase(recipeKey) {
         showMessage('背包空間不足，無法收下料理成品。');
         return;
     }
-    if (!consumeAction(3)) return;
-    consumeInventoryItems(recipe.input);
+    const actionCost = base.structures.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 3;
+    if (!consumeAction(actionCost)) return;
+    const inputQuality = consumeInventoryItems(recipe.input);
+    const outputQuality = getCraftedQuality(inputQuality
+        + (base.structures.includes('smokehouse') ? 0.1 : 0)
+        + (base.structures.includes('master_kitchen') ? 0.2 : 0));
     const outputs = recipeKey === 'seaWater' && base.structures.includes('saltMaker')
         ? [...recipe.output, '鹽']
         : recipe.output;
-    outputs.forEach(item => addInventoryItem(item));
-    if (recipe.thirstGain) player.thirst = Math.min(player.maxThirst, player.thirst + recipe.thirstGain);
+    outputs.forEach(item => addInventoryItem(item, outputQuality));
+    if (recipe.thirstGain) player.thirst = Math.min(player.maxThirst, player.thirst + Math.round(recipe.thirstGain * (1 + outputQuality)));
     showMessage(`🔥 烹煮完成：${recipe.message}`);
     updateUI();
 }
@@ -1591,9 +2131,10 @@ function drinkWater(itemName = '可飲用水') {
         return;
     }
     if (!consumeAction(1)) return;
-    player.inventory.splice(player.inventory.indexOf(itemName), 1);
-    player.currentBackpackUsage = player.inventory.length;
-    const waterGain = itemName === '生水' ? 10 : 30;
+    const itemIndex = player.inventory.indexOf(itemName);
+    const quality = getInventoryQuality(itemIndex);
+    removeInventoryAt(itemIndex);
+    const waterGain = Math.round((itemName === '生水' ? 10 : 30) * (1 + quality));
     player.thirst = Math.min(player.maxThirst, player.thirst + waterGain);
     if (itemName === '生水' && Math.random() < gameRules.rawWaterPoisonChance) {
         poisonPlayer('飲用未煮沸生水');
@@ -1610,7 +2151,7 @@ function purifyWater() {
         return;
     }
     const base = gameState.bases[gameState.currentBaseId];
-    if (!base.structures.includes('fireplace') && !base.structures.includes('purifier')) {
+    if (!base.structures.includes('fireplace') && !base.structures.includes('purifier') && !base.structures.includes('desalination_tower')) {
         showMessage('⚠️ 需要根據地篝火或海水淨化設施才能煮製海水。');
         return;
     }
@@ -1677,9 +2218,7 @@ function addItemToBackpack(item) {
     if (!canAddItemToBackpack()) {
         return false;
     }
-    player.inventory.push(item);
-    player.currentBackpackUsage++;
-    return true;
+    return addInventoryItem(item);
 }
 
 /**
@@ -1706,9 +2245,8 @@ function moveItemToBase(itemIndex) {
         return;
     }
     
-    base.storage.push(item);
-    player.inventory.splice(itemIndex, 1);
-    player.currentBackpackUsage--;
+    const removed = removeInventoryAt(itemIndex);
+    addBaseStorageItem(base, item, removed?.quality || 0);
     
     showMessage(`✓ 將 ${item} 移入根據地。`);
     updateUI();
@@ -1736,8 +2274,10 @@ function takeItemFromBase(itemIndex) {
         return;
     }
     
-    player.inventory.push(item);
-    player.currentBackpackUsage++;
+    if (!Array.isArray(base.storageQuality)) base.storageQuality = [];
+    while (base.storageQuality.length < base.storage.length) base.storageQuality.push(0);
+    const quality = base.storageQuality.splice(itemIndex, 1)[0] || 0;
+    addInventoryItem(item, quality);
     base.storage.splice(itemIndex, 1);
     
     showMessage(`✓ 將 ${item} 取出。`);
@@ -1871,6 +2411,10 @@ function constructStructure(structureName) {
         showMessage('⚠️ 不存在的設施！');
         return;
     }
+    if (!isBlueprintUnlocked(structureName)) {
+        showMessage(`尚未解鎖「${structure.name}」的科技或圖紙。`);
+        return;
+    }
     
     // 檢查技能等級
     if (player.skills.construction < structure.requiredLevel) {
@@ -1891,9 +2435,11 @@ function constructStructure(structureName) {
         return;
     }
     
-    if (!consumeAction(3)) return;
-    consumeInventoryItems(structure.recipe);
+    if (!consumeAction(getTechBranchRank('crafting') >= 10 ? 2 : 3)) return;
+    const inputQuality = consumeInventoryItems(structure.recipe);
     base.structures.push(structureName);
+    base.structureQuality = base.structureQuality || {};
+    base.structureQuality[structureName] = getCraftedQuality(inputQuality);
     
     addSkillExp('construction', 20);
     showMessage(`🏗️ 成功建造了 ${structure.name}！\n建造經驗 +20`);
@@ -1913,15 +2459,15 @@ function generateBaseResources() {
     
     // 根據不同地形生成資源
     if (Math.random() < baseType.baseFishChance) {
-        base.storage.push('新鮮魚');
+        addBaseStorageItem(base, '新鮮魚');
     }
     
     if (Math.random() < baseType.baseBerriesChance) {
-        base.storage.push('野生漿果');
+        addBaseStorageItem(base, '野生漿果');
     }
     
     if (Math.random() < baseType.baseAnimalChance) {
-        base.storage.push('獵物屍體');
+        addBaseStorageItem(base, '獵物屍體');
     }
 }
 
@@ -1972,6 +2518,8 @@ function updateBaseUI() {
 // ============= 場景顯示 =============
 function showScene(sceneName) {
     const scene = scenes[sceneName];
+    const merchantLocation = ensureMerchantStock().merchantLocation;
+    const sceneNpc = sceneName === merchantLocation ? '商人' : scene.npc === '商人' ? null : scene.npc;
     const biome = ['jungle', 'island', 'grassland'].includes(player.biome) ? player.biome : 'jungle';
     const sceneTitle = scene.mapArea ? scene.name : window.sceneArt.titles[biome][sceneName] || scene.name;
     const sceneDescription = scene.mapArea ? scene.description : window.sceneArt.descriptions[biome][sceneName] || scene.description;
@@ -2007,15 +2555,15 @@ function showScene(sceneName) {
     if (Number.isInteger(scene.mapRow)) {
         info += (info ? ' | ' : '') + `🗺️ 地圖格：${scene.mapColumn + 1}, ${scene.mapRow + 1} / ${mapColumns}×${mapRows}`;
     }
-    if (scene.npc) {
-        info += (info ? ' | ' : '') + `👤 此處有 NPC：${scene.npc}`;
+    if (sceneNpc) {
+        info += (info ? ' | ' : '') + `👤 此處有 NPC：${sceneNpc}`;
         const npcElement = document.getElementById('sceneNpc');
         if (npcElement) {
             const npcDetails = {
                 村長: ['👨‍🌾', '村長', '沉穩親切的村莊管理者'],
                 農民: ['🧑‍🌾', '農民', '樸實可靠的農務工作者'],
                 商人: ['🧑‍💼', '商人', '穿著整潔、善於交涉的交易者']
-            }[scene.npc] || ['👤', scene.npc, '正在此處活動的人物'];
+            }[sceneNpc] || ['👤', sceneNpc, '正在此處活動的人物'];
             npcElement.innerHTML = `<span class="npc-avatar">${npcDetails[0]}</span><span><strong>${npcDetails[1]}</strong><small>${npcDetails[2]}</small></span>`;
             npcElement.hidden = false;
         }
@@ -2056,13 +2604,19 @@ function exploreScene() {
 
     // 各場景可設定時段限定採集物，未設定時使用一般採集物。
     const periodItems = scene.periodItems && scene.periodItems[period];
-    const items = scene.waterSource === 'fresh' ? ['生水'] : scene.waterSource === 'sea' ? ['海水'] : periodItems || scene.items;
+    const commonItems = scene.waterSource === 'fresh' ? ['生水'] : scene.waterSource === 'sea' ? ['海水'] : periodItems || scene.items || [];
+    const items = [...commonItems, ...getAvailableAdvancedMaterials()];
     if (items && items.length) {
         const randomItem = items[Math.floor(Math.random() * items.length)];
-        
-        // 嘗試添加到背包
-        if (addInventoryItem(randomItem)) {
-            showMessage(`🎉 發現了 ${randomItem}！消耗 ${actionCost} 點行動值。`);
+        const quality = rollGatheringQuality();
+        const quantity = 1 + (Math.random() < getTechBranchRank('gathering') / 30 ? 1 : 0);
+        let found = 0;
+        for (let count = 0; count < quantity; count++) {
+            if (!addInventoryItem(randomItem, quality)) break;
+            found++;
+        }
+        if (found) {
+            showMessage(`🎉 發現了 ${randomItem} ×${found}${quality ? `（品質 +${Math.round(quality * 100)}%）` : ''}！消耗 ${actionCost} 點行動值。`);
             addDiscovery(`探索發現：${randomItem}（${scene.name} / ${period}）`);
         } else {
             showMessage(`🎉 發現了 ${randomItem}！\n但背包滿了！無法拿取。`);
@@ -2077,20 +2631,30 @@ function exploreScene() {
 // ============= 對話系統 =============
 function talkToNPC() {
     const scene = scenes[gameState.currentScene];
-    
-    if (!scene.npc) {
+    const merchantLocation = ensureMerchantStock().merchantLocation;
+    if (gameState.currentScene === merchantLocation) {
+        if (!consumeAction(1)) return;
+        openMerchantShop();
+        return;
+    }
+    const currentNpc = scene.npc === '商人' ? null : scene.npc;
+
+    if (!currentNpc) {
+        if (scene.npc === '商人') {
+            showMessage(`商人今天不在市集，今日位置：${scenes[merchantLocation]?.name || '未知地點'}。`);
+            return;
+        }
         showMessage('這裡沒有人...');
         return;
     }
 
     const dialogues = {
         '村長': '歡迎來到村莊！我聽說山上有一隻強大的怪物...',
-        '農民': '我在打理這個農場已經很多年了。如果你需要食物，我可以幫你。',
-        '商人': '歡迎光臨！我這裡有各種商品。不過現在還沒實現購買功能呢。'
+        '農民': '我在打理這個農場已經很多年了。如果你需要食物，我可以幫你。'
     };
 
     if (!consumeAction(1)) return;
-    showMessage(dialogues[scene.npc]);
+    showMessage(dialogues[currentNpc]);
     updateUI();
 }
 
@@ -2141,6 +2705,7 @@ function startBattle(enemyName) {
         element: enemyData.element,
         level: enemyData.level,
         isBoss: enemyData.boss || false,
+        drops: enemyData.drops || [],
         defending: false
     };
 
@@ -2209,7 +2774,7 @@ function playerAttack(type, skillIndex = 0) {
     let skillName = '';
 
     if (type === 'normal') {
-        damage = calculateDamage(player.attack, enemy.defense, player.crit, player.critDmg);
+        damage = calculateDamage(player.attack * getTechDamageMultiplier(), enemy.defense, player.crit, player.critDmg);
         skillName = '普通攻擊';
     } else if (type === 'skill') {
         // 根據玩家元素屬性選擇技能
@@ -2220,7 +2785,7 @@ function playerAttack(type, skillIndex = 0) {
                 'fire': '炎', 'water': '水', 'earth': '地',
                 'wind': '風', 'wood': '木', 'lightning': '電'
             }[randomElement[0]];
-            damage = calculateDamage(player.attack * 1.3, enemy.defense * 0.8, player.crit * 1.2, player.critDmg);
+            damage = calculateDamage(player.attack * getTechDamageMultiplier() * 1.3, enemy.defense * 0.8, player.crit * 1.2, player.critDmg);
             skillName = `${elementName}屬性技能`;
             
             // 屬性相剋判定
@@ -2232,7 +2797,7 @@ function playerAttack(type, skillIndex = 0) {
                 skillName += ' (被克制...)';
             }
         } else {
-            damage = calculateDamage(player.attack, enemy.defense, player.crit, player.critDmg);
+            damage = calculateDamage(player.attack * getTechDamageMultiplier(), enemy.defense, player.crit, player.critDmg);
             skillName = '普通攻擊';
         }
     }
@@ -2264,7 +2829,7 @@ function playerDefend() {
 }
 
 function useItem() {
-    const healItem = player.inventory.find(item => item.includes('藥') || item === '麵包' || item === '熟肉' || item === '野生漿果');
+    const healItem = player.inventory.find(item => item.includes('藥') || item === '麵包' || item === '熟肉' || item === '野生漿果' || item === '神秘料理');
     if (!healItem) {
         addBattleLog(`你沒有可使用的道具！`, 'system');
         return;
@@ -2272,7 +2837,7 @@ function useItem() {
 
     const healAmount = 50;
     player.hp = Math.min(player.hp + healAmount, player.maxHp);
-    player.inventory.splice(player.inventory.indexOf(healItem), 1);
+    removeInventoryAt(player.inventory.indexOf(healItem));
     if (!consumeNeedsOnly()) return;
     
     addBattleLog(`使用了 ${healItem}，恢復 ${healAmount} 點血量！（戰鬥不消耗行動值）`, 'player');
@@ -2310,7 +2875,8 @@ function enemyAttack() {
         addBattleLog(`${enemy.name} 攻擊你！造成 ${damage} 點傷害！`, 'enemy');
     }
 
-    player.hp -= damage;
+    const reducedDamage = Math.max(1, Math.floor(damage * (1 - getTechDamageReduction())));
+    player.hp -= reducedDamage;
     updateBattleUI();
 
     if (player.hp <= 0) {
@@ -2330,24 +2896,31 @@ function calculateDamage(attack, defense, crit, critDmg) {
     return damage;
 }
 
+function calculateEnemyGold(enemy) {
+    const strength = enemy.level * 8 + enemy.attack * 2 + enemy.defense * 2 + enemy.maxHp * 0.2;
+    const bossMultiplier = enemy.isBoss ? 2.5 : 1;
+    return Math.max(1, Math.round(strength * bossMultiplier * (0.85 + Math.random() * 0.3)));
+}
+
 function battleWin() {
     const enemy = gameState.battleEnemy;
     const expGain = enemy.level * 25;
-    const goldGain = enemy.level * 10;
+    const goldGain = calculateEnemyGold(enemy);
 
     player.exp += expGain;
-    if (!addInventoryItem('金幣 x' + goldGain)) addBattleLog('背包已滿，金幣未能收下。', 'system');
+    player.gold = Math.max(0, Number(player.gold) || 0) + goldGain;
 
     if (Math.random() < gameRules.rawMeatDropChance && addInventoryItem('生肉')) {
         addBattleLog('🍖 獲得素材：生肉。生肉可以食用，但有中毒風險。', 'system');
     }
-    const materials = (scenes[gameState.currentScene]?.drops || []).filter(item => item !== '生肉');
-    if (materials.length && Math.random() < 0.5) {
+    const materials = [...new Set([...(enemy.drops || []), ...(scenes[gameState.currentScene]?.drops || [])])].filter(item => item !== '生肉' && item !== '金幣');
+    if (materials.length && Math.random() < (enemy.drops?.length ? 0.65 : 0.5)) {
         const material = materials[Math.floor(Math.random() * materials.length)];
-        if (addInventoryItem(material)) addBattleLog(`🧰 獲得素材：${material}。`, 'system');
+        const quality = Math.min(1, enemy.level / 30);
+        if (addInventoryItem(material, quality)) addBattleLog(`🧰 獲得素材：${material}${quality >= 0.5 ? `（品質 +${Math.round(quality * 100)}%）` : ''}。`, 'system');
     }
 
-    addBattleLog(`🎉 戰鬥勝利！\n獲得 ${expGain} 經驗值和 ${goldGain} 金幣！`, 'system');
+    addBattleLog(`🎉 戰鬥勝利！\n獲得 ${expGain} 經驗值與 ${goldGain} 金幣！`, 'system');
 
     if (player.exp >= player.maxExp) {
         player.level++;
@@ -2370,7 +2943,7 @@ function battleLose() {
     player.fatigue = Math.min(player.maxFatigue, player.fatigue + 20);
     if (player.inventory.length > 0) {
         const lostIndex = Math.floor(Math.random() * player.inventory.length);
-        const lostItem = player.inventory.splice(lostIndex, 1)[0];
+        const lostItem = removeInventoryAt(lostIndex)?.item;
         addBattleLog(`遺失道具：${lostItem}；疲勞 +20。`, 'system');
     }
     
@@ -2407,6 +2980,7 @@ function updateUI() {
     document.getElementById('playerExp').textContent = `${player.exp}/${player.maxExp}`;
     document.getElementById('playerHP').textContent = `${Math.max(0, player.hp)}/${player.maxHp}`;
     document.getElementById('playerHPFill').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+    if (document.getElementById('playerGold')) document.getElementById('playerGold').textContent = `${player.gold || 0}`;
     
     document.getElementById('playerAttack').textContent = player.attack;
     document.getElementById('playerDefense').textContent = player.defense;
@@ -2477,10 +3051,12 @@ function updateUI() {
     // 物品欄
     const inventory = document.getElementById('inventory');
     inventory.innerHTML = '';
-    player.inventory.forEach(item => {
+    ensureInventoryQuality();
+    player.inventory.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'inventory-item';
-        div.textContent = item;
+        const quality = getInventoryQuality(index);
+        div.textContent = quality > 0 ? `${item} · 優良 ${Math.round(quality * 100)}%` : item;
         inventory.appendChild(div);
     });
 
