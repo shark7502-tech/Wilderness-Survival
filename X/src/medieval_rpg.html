@@ -284,6 +284,18 @@
             font-weight: bold;
         }
 
+        .inventory-item .secondary-button { margin: 6px 0 0 8px; padding: 5px 8px; }
+        .equipment-slot, .storage-transfer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(140, 158, 112, .25);
+        }
+        .storage-transfer-row input { width: 64px; }
+        .storage-transfer-row .secondary-button, .equipment-slot .secondary-button { padding: 5px 8px; }
+
         .element-panel {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -647,7 +659,7 @@
         .item-catalog-entry small { color: #b6c1ac; line-height: 1.5; }
         .tech-tree-panel, .merchant-panel { width: min(900px, 100%); }
         .tech-tree-summary, .merchant-summary { padding: 12px 14px; margin-bottom: 14px; border: 1px solid #526448; background: #202f24; color: #ecebdc; }
-        .tech-branch-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .tech-branch-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
         .tech-path-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #4e6048; background: #202f24; }
         .tech-path-card strong { color: #e4d6a7; }
         .tech-path-card p, .tech-path-card small { margin: 0; color: #c3cebb; line-height: 1.55; }
@@ -835,6 +847,7 @@
             </div>
             <div class="action-buttons base-action-menu" id="baseActions" hidden>
                 <button class="btn-action" onclick="openCraftPanel()">🛠️ 製作</button>
+                <button class="btn-action" id="equipmentWorkbenchButton" onclick="openEquipmentWorkbench()" hidden>⚒️ 裝備製作台</button>
                 <button class="btn-action" onclick="openResearchPanel()">🌳 科技樹</button>
                 <button class="btn-action" onclick="useInventoryItem()">🎒 使用道具</button>
                 <button class="btn-action" onclick="rest()">😴 休息</button>
@@ -1051,7 +1064,7 @@
             </section>
             <section class="info-panel" id="panel-pack">
             <!-- 物品欄 -->
-            <h2>背包</h2>
+            <h2 id="inventoryTitle">背包 (1/20)</h2>
             <div class="inventory" id="inventory">
                 <div class="inventory-item">🏠 地圖</div>
             </div>
@@ -1106,6 +1119,22 @@
     </section>
     <section class="overlay-layer" id="settingsOverlay" hidden>
         <div class="overlay-panel"><button class="close-button" onclick="closeOverlay('settingsOverlay')" aria-label="關閉">×</button><p class="eyebrow">PREFERENCES</p><h2>遊戲設定</h2><label class="setting-row"><span><strong>背景音樂</strong><small>僅於主選單播放</small></span><input id="menuMusicToggleModal" type="checkbox" checked onchange="setMenuMusicEnabled(this.checked)"></label><label class="setting-row"><span><strong>主選單曲目</strong><small>下次回到主選單時套用</small></span><select id="menuMusicThemeModal" onchange="setMenuMusicTheme(this.value)"><option value="jungle">🌿 叢林</option><option value="island">🌊 海島</option><option value="grassland">🌾 草原</option></select></label><label class="setting-row"><span><strong>音樂音量</strong><small>背景音樂 · <output id="menuMusicVolumeModalLabel">42%</output></small></span><input id="menuMusicVolumeModal" type="range" min="0" max="100" step="1" value="42" oninput="setMenuMusicVolume(this.value)"></label><label class="setting-row"><span><strong>音效</strong><small>操作時播放簡短提示音</small></span><input id="soundToggleModal" type="checkbox" onchange="setSoundEnabled(this.checked)"></label><div class="timezone-summary"><span>⌖</span><div><small>玩家現實時區</small><strong id="settingsTimeZone">讀取中</strong></div></div></div>
+    </section>
+    <section class="overlay-layer" id="craftOverlay" hidden>
+        <div class="overlay-panel">
+            <button class="close-button" onclick="closeOverlay('craftOverlay')" aria-label="關閉">×</button>
+            <p class="eyebrow">BASE CRAFTING</p>
+            <h2>製作與建造</h2>
+            <div class="save-slot-list" id="craftRecipeList"></div>
+        </div>
+    </section>
+    <section class="overlay-layer" id="equipmentCraftOverlay" hidden>
+        <div class="overlay-panel collection-panel">
+            <button class="close-button" onclick="closeOverlay('equipmentCraftOverlay')" aria-label="關閉">×</button>
+            <p class="eyebrow">EQUIPMENT WORKBENCH</p>
+            <h2>裝備製作台</h2>
+            <div class="save-slot-list" id="equipmentRecipeList"></div>
+        </div>
     </section>
     <section class="overlay-layer" id="itemCatalogOverlay" hidden>
         <div class="overlay-panel collection-panel"><button class="close-button" onclick="closeOverlay('itemCatalogOverlay')" aria-label="關閉">×</button><p class="eyebrow">FIELD CRAFTING CATALOG</p><h2>道具與製作目錄</h2><div class="item-catalog-list" id="itemCatalogList"></div></div>

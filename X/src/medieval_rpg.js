@@ -11,6 +11,7 @@ let gameState = {
     lastPeriod: null,
     lastActionPointTime: Date.now(),
     gameTimeOffsetMs: 0,
+    lastNeedsTickGameMs: null,
     gameClockPaused: true,
     periodTransitionKey: null,
     enteredSceneEncounterKey: null,
@@ -28,14 +29,18 @@ const gameRules = {
     explorationEncounterChance: 1 / 10,
     sceneEntryEncounterChance: 1 / 20,
     actionPointRecoveryMinutes: 5,
-    actionNeedsCost: 5,
+    actionFatigueGain: 5,
+    movementFatigueGain: 1,
     explorationActionCost: 3,
     restActionCost: 3,
     returnActionCost: 10,
     sleepActionCost: 3,
     restFatigueRecovery: 15,
+    outdoorRestActionCost: 5,
+    outdoorRestFatigueRecovery: 20,
+    gamePeriodMs: 6 * 60 * 60 * 1000,
     explorationFatigueGain: 5,
-    periodNeedsCost: 20,
+    needsTickMinutes: 10,
     escapeChance: 0.7,
     rawMeatDropChance: 0.5,
     rawWaterPoisonChance: 0.3,
@@ -145,6 +150,10 @@ const baseStructures = {
     boiler: {
         name: '製作鍋爐', icon: '♨️', recipe: { '木材': 10, '金屬碎片': 6, '小石子': 8 },
         description: '提升製作效率，製作行動消耗減少', effect: 'craft_cost_reduction', requiredLevel: 1
+    },
+    equipment_workbench: {
+        name: '裝備製作台', icon: '⚒️', recipe: { '木材': 8, '小石子': 6, '金屬碎片': 2 },
+        description: '製作武器、防具、鞋子與飾品', effect: 'equipment_crafting', requiredLevel: 1
     },
     desalination_tower: {
         name: '海水淨化塔', icon: '🚰', recipe: { '木材': 10, '金屬碎片': 8, '水晶碎片': 3 },
@@ -389,10 +398,43 @@ const itemRecipes = {
     antidote: { name: '解毒藥', icon: '🧪', recipe: { '草藥': 2, '可飲用水': 1 }, description: '解除中毒狀態' },
     candle: { name: '蠟燭', icon: '🕯️', recipe: { '植物纖維': 2, '火種': 1 }, description: '照亮黑暗洞穴' },
     torch: { name: '火把', icon: '🔦', recipe: { '木材': 1, '植物纖維': 1, '火種': 1 }, description: '可攜式照明工具' },
-    spear: { name: '石矛', icon: '🗡️', recipe: { '木材': 2, '小石子': 2, '植物纖維': 1 }, description: '簡易狩獵與防身工具' },
     herbal_soup: { name: '草藥濃湯', icon: '🥣', recipe: { '草藥': 2, '生水': 1, '火種': 1 }, description: '恢復飽食與水分的料理' },
     berry_tart: { name: '莓果塔', icon: '🥧', recipe: { '漿果': 2, '穀物': 1, '雞蛋': 1 }, description: '高品質甜點料理' },
     salted_fish: { name: '鹽漬魚', icon: '🐟', recipe: { '新鮮魚': 1, '鹽': 1, '火種': 1 }, description: '保存良好的魚料理' }
+};
+
+const equipmentCatalog = {
+    鐵劍: { slot: 'weapon', stats: { attack: 2 } },
+    皮盾: { slot: 'armor', stats: { defense: 2 } },
+    石矛: { slot: 'weapon', stats: { attack: 5, speed: -1 } },
+    獵人長劍: { slot: 'weapon', stats: { attack: 8, speed: -2 } },
+    狼牙戰刃: { slot: 'weapon', stats: { attack: 15, speed: -3 } },
+    獵手皮甲: { slot: 'armor', stats: { defense: 5, speed: -1 } },
+    巨獸重甲: { slot: 'armor', stats: { defense: 12, speed: -2 } },
+    旅人靴: { slot: 'shoes', stats: { speed: 3, defense: 1 } },
+    疾風長靴: { slot: 'shoes', stats: { speed: 7, defense: -2 } },
+    猛攻護符: { slot: 'accessory', stats: { attack: 4 } },
+    壁壘護符: { slot: 'accessory', stats: { defense: 4 } },
+    迅捷戒: { slot: 'accessory', stats: { speed: 4 } },
+    獵手戒: { slot: 'accessory', stats: { crit: 5 } },
+    旅行背包: { slot: 'accessory', stats: {}, special: 'backpack' },
+    小型睡袋: { slot: 'accessory', stats: {}, special: 'outdoorRest' }
+};
+
+const equipmentRecipes = {
+    stone_spear: { name: '石矛', icon: '🗡️', recipe: { '木材': 2, '小石子': 2, '植物纖維': 1 }, source: '森林、平原、山地探索或採集' },
+    hunter_sword: { name: '獵人長劍', icon: '⚔️', recipe: { '金屬碎片': 4, '木材': 2, '皮革': 1 }, source: '金屬碎片來自山地／洞穴探索；皮革來自野外戰鬥掉落' },
+    wolf_blade: { name: '狼牙戰刃', icon: '🗡️', recipe: { '金屬碎片': 5, '狼王之牙': 2, '皮革': 2 }, source: '金屬碎片來自山地／洞穴探索；狼王之牙由菁英狼王掉落' },
+    hunter_armor: { name: '獵手皮甲', icon: '🦺', recipe: { '皮革': 4, '植物纖維': 3, '金屬碎片': 1 }, source: '皮革來自野外戰鬥掉落；纖維可探索採集；金屬碎片來自山地／洞穴' },
+    beast_armor: { name: '巨獸重甲', icon: '🛡️', recipe: { '巨獸皮': 2, '金屬碎片': 4, '植物纖維': 3 }, source: '巨獸皮由荒野巨熊掉落；金屬碎片來自山地／洞穴探索' },
+    traveler_boots: { name: '旅人靴', icon: '🥾', recipe: { '皮革': 2, '植物纖維': 2 }, source: '皮革來自野外戰鬥掉落；植物纖維可探索採集' },
+    swift_boots: { name: '疾風長靴', icon: '👢', recipe: { '皮革': 3, '狼王之牙': 1, '水晶碎片': 1 }, source: '皮革來自野外戰鬥；狼王之牙由菁英狼王掉落；水晶碎片由高級探索／古代守衛取得' },
+    attack_charm: { name: '猛攻護符', icon: '🔴', recipe: { '水晶碎片': 2, '皮革': 1 }, source: '水晶碎片由高級探索／古代守衛取得；皮革來自野外戰鬥' },
+    defense_charm: { name: '壁壘護符', icon: '🟢', recipe: { '金屬碎片': 2, '巨獸皮': 1 }, source: '金屬碎片來自山地／洞穴；巨獸皮由荒野巨熊掉落' },
+    speed_ring: { name: '迅捷戒', icon: '💨', recipe: { '水晶': 2, '植物纖維': 2 }, source: '水晶來自河谷探索；植物纖維可探索採集' },
+    hunter_ring: { name: '獵手戒', icon: '💍', recipe: { '狼王之牙': 1, '水晶碎片': 1 }, source: '狼王之牙由菁英狼王掉落；水晶碎片由高級探索／古代守衛取得' },
+    travel_pack: { name: '旅行背包', icon: '🎒', recipe: { '皮革': 2, '植物纖維': 4 }, source: '皮革來自野外戰鬥掉落；植物纖維可探索採集' },
+    small_sleeping_bag: { name: '小型睡袋', icon: '🛌', recipe: { '皮革': 2, '植物纖維': 3, '木材': 1 }, source: '皮革來自野外戰鬥；植物纖維與木材可探索採集' }
 };
 
 const itemCatalog = [
@@ -428,12 +470,24 @@ const itemCatalog = [
     ['MISC-06', '寶藏', '探索取得的珍藏', '收藏與任務用途', '遺跡探索'],
     ['MISC-07', '王冠', '古堡遺留的珍貴物件', '任務與收藏用途', '古堡探索'],
     ['MISC-08', '獵物屍體', '根據地生成的狩獵收穫', '可存入根據地（拆解功能尚未加入）', '高地營地資源生成'],
-    ['GEAR-01', '鐵劍', '基本近戰武器', '提高攻擊能力', '初始裝備'],
-    ['GEAR-02', '皮盾', '基礎防護裝備', '提高防禦能力', '初始裝備'],
+    ['GEAR-01', '鐵劍', '基本近戰武器', '攻擊 +2', '初始裝備'],
+    ['GEAR-02', '皮盾', '基礎防護裝備', '防禦 +2', '初始裝備'],
+    ['GEAR-03', '石矛', '簡易長柄武器', '攻擊 +5、速度 -1', '裝備製作台：木材×2 + 小石子×2 + 植物纖維×1'],
+    ['GEAR-04', '獵人長劍', '強化近戰武器', '攻擊 +8、速度 -2', '裝備製作台：金屬碎片×4 + 木材×2 + 皮革×1'],
+    ['GEAR-05', '狼牙戰刃', '菁英素材鍛造武器', '攻擊 +15、速度 -3', '裝備製作台：金屬碎片×5 + 狼王之牙×2 + 皮革×2'],
+    ['GEAR-06', '獵手皮甲', '輕型防具', '防禦 +5、速度 -1', '裝備製作台：皮革×4 + 植物纖維×3 + 金屬碎片×1'],
+    ['GEAR-07', '巨獸重甲', '重型防具', '防禦 +12、速度 -2', '裝備製作台：巨獸皮×2 + 金屬碎片×4 + 植物纖維×3'],
+    ['GEAR-08', '旅人靴', '輕便鞋具', '速度 +3、防禦 +1', '裝備製作台：皮革×2 + 植物纖維×2'],
+    ['GEAR-09', '疾風長靴', '稀有鞋具', '速度 +7、防禦 -2', '裝備製作台：皮革×3 + 狼王之牙×1 + 水晶碎片×1'],
+    ['GEAR-10', '猛攻護符', '攻擊型飾品', '攻擊 +4', '裝備製作台：水晶碎片×2 + 皮革×1'],
+    ['GEAR-11', '壁壘護符', '防禦型飾品', '防禦 +4', '裝備製作台：金屬碎片×2 + 巨獸皮×1'],
+    ['GEAR-12', '迅捷戒', '速度型飾品', '速度 +4', '裝備製作台：水晶×2 + 植物纖維×2'],
+    ['GEAR-13', '獵手戒', '爆擊型飾品', '爆擊 +5%', '裝備製作台：狼王之牙×1 + 水晶碎片×1'],
+    ['GEAR-14', '旅行背包', '功能型飾品', '背包容量 +10 格；最多裝備 2 個', '裝備製作台：皮革×2 + 植物纖維×4'],
+    ['GEAR-15', '小型睡袋', '野外休息用功能型飾品', '裝備後可在野外休息；不增加其他屬性', '裝備製作台：皮革×2 + 植物纖維×3 + 木材×1'],
     ['TOOL-01', '解毒藥', '清除中毒的藥劑', '使用後停止中毒傷害', '根據地製作：草藥×2 + 可飲用水×1'],
     ['TOOL-02', '蠟燭', '微弱但持續的照明用品', '進入黑暗洞穴', '根據地製作：植物纖維×2 + 火種×1'],
     ['TOOL-03', '火把', '可攜式照明與引火工具', '探索黑暗區域', '根據地製作：木材×1 + 植物纖維×1 + 火種×1'],
-    ['TOOL-04', '石矛', '簡易狩獵工具', '防身與狩獵裝備', '根據地製作：木材×2 + 小石子×2 + 植物纖維×1'],
     ['STRUCT-01', '草蓆', '最簡易的床具', '根據地睡眠恢復疲勞 40', '根據地製作：植物纖維×3'],
     ['STRUCT-02', '木床', '穩固的木製床具', '根據地睡眠恢復疲勞 60', '根據地製作：木材×8 + 植物纖維×2'],
     ['STRUCT-03', '彈簧床', '舒適的進階床具', '根據地睡眠恢復疲勞 80', '建造 Lv.2；木材×10 + 金屬碎片×3 + 植物纖維×4'],
@@ -441,6 +495,7 @@ const itemCatalog = [
     ['STRUCT-05', '海水淨化設施', '海水處理設施', '可替代篝火煮製海水', '根據地製作：木材×4 + 小石子×4 + 金屬碎片×2'],
     ['STRUCT-06', '陶罐', '擴充根據地儲物容量', '存儲上限由 10000 提高至 20000 件', '根據地製作：黏土×3'],
     ['STRUCT-07', '製鹽工具', '製鹽設施', '煮海水時額外取得 1 鹽', '根據地製作，建造 Lv.2：小石子×5 + 木材×2'],
+    ['STRUCT-08', '裝備製作台', '專用裝備工作站', '解鎖武器、防具、鞋子與飾品製作', '根據地製作：木材×8 + 小石子×6 + 金屬碎片×2'],
     ['MISC-09', '貝殼', '海岸常見的硬殼素材', '探索與收藏素材', '海岸探索或怪物掉落'],
     ['MAT-14', '精纖植物纖維', '稀有強韌纖維', '高級設備與科技升級素材', '探索 Lv.5 以上搜尋／菁英怪掉落'],
     ['MAT-15', '遠古樹脂', '凝結的古代樹液', '科技升級與高級木屋素材', '探索 Lv.10 以上搜尋／菁英怪掉落'],
@@ -467,6 +522,10 @@ const technologyBranches = {
     crafting: {
         name: '製作擅長',
         perk: rank => `製作品質效果 +${Math.round(rank / 30 * 100)}%；製作行動成本逐步降低`
+    },
+    backpack: {
+        name: '行囊擴充',
+        perk: rank => `背包容量 +${Math.floor(rank / 5) * 5} 格`
     }
 };
 
@@ -692,11 +751,14 @@ let player = {
     gold: 0,
     inventory: ['地圖'],
     inventoryQuality: [0],
-    techTree: { level: 0, gathering: 0, combat: 0, crafting: 0 },
+    techTree: { level: 0, gathering: 0, combat: 0, crafting: 0, backpack: 0 },
     unlockedBlueprints: [],
+    baseStats: { attack: 13, defense: 8, speed: 12, crit: 20, critDmg: 150 },
     equipment: {
         weapon: '鐵劍',
-        armor: '皮盾'
+        armor: '皮盾',
+        shoes: null,
+        accessories: [null, null]
     },
     elements: {
         fire: 0,
@@ -725,6 +787,7 @@ let player = {
     isPoisoned: false,
     poisonProgressMs: 0,
     // 新增：背包容量
+    baseBackpackCapacity: 20,
     backpackCapacity: 20,
     currentBackpackUsage: 1,  // 初始只有地圖
     // 新增：是否在根據地中
@@ -784,6 +847,7 @@ function initGame() {
     window.menuMusic.setVolume(menuMusicVolume);
     if (menuMusicEnabled) window.menuMusic.start(menuMusicTheme);
     player.lastActionPointTime = Date.now();
+    gameState.lastNeedsTickGameMs = getGameClockMs();
     gameState.lastPeriod = getCurrentGamePeriod();
     gameState.periodTransitionKey = getPeriodTransitionKey();
     // 初始化飢餓檢查日期
@@ -830,6 +894,7 @@ function startNewGame() {
     gameState.gameTimeOffsetMs = 0;
     gameState.gameClockStartRealMs = now;
     gameState.gameClockStartMs = now;
+    gameState.lastNeedsTickGameMs = now;
     gameState.gameClockPaused = false;
     gameState.bases = {};
     gameState.currentBaseId = null;
@@ -933,9 +998,33 @@ function loadFromSlot(slot) {
     player.gold = Math.max(0, Number(player.gold) || 0) + legacyGold;
     player.inventoryQuality = Array.isArray(player.inventoryQuality) ? player.inventoryQuality.slice(0, player.inventory.length) : [];
     while (player.inventoryQuality.length < player.inventory.length) player.inventoryQuality.push(0);
-    player.techTree = { level: 0, gathering: 0, combat: 0, crafting: 0, ...(player.techTree || {}) };
+    player.techTree = { level: 0, gathering: 0, combat: 0, crafting: 0, backpack: 0, ...(player.techTree || {}) };
+    player.equipment = {
+        weapon: null,
+        armor: null,
+        shoes: null,
+        accessories: [null, null],
+        ...(player.equipment || {})
+    };
+    player.equipment.accessories = Array.isArray(player.equipment.accessories)
+        ? player.equipment.accessories.slice(0, 2)
+        : [null, null];
+    while (player.equipment.accessories.length < 2) player.equipment.accessories.push(null);
+    if (save.player?.baseStats) {
+        player.baseStats = { ...initialPlayerData.baseStats, ...save.player.baseStats };
+    } else {
+        const equipmentBonuses = getEquipmentBonuses(player.equipment);
+        player.baseStats = {
+            attack: player.attack - equipmentBonuses.attack,
+            defense: player.defense - equipmentBonuses.defense,
+            speed: player.speed - equipmentBonuses.speed,
+            crit: player.crit - equipmentBonuses.crit,
+            critDmg: player.critDmg - equipmentBonuses.critDmg
+        };
+    }
+    player.baseBackpackCapacity = Math.max(20, Number(player.baseBackpackCapacity) || 20);
     player.unlockedBlueprints = Array.isArray(player.unlockedBlueprints) ? player.unlockedBlueprints : [];
-    player.currentBackpackUsage = player.inventory?.length || 0;
+    recalculatePlayerStats();
     if (!['jungle', 'island', 'grassland'].includes(player.biome)) player.biome = 'jungle';
     Object.assign(gameState, save.gameState);
     gameState.merchantStock = Array.isArray(gameState.merchantStock) ? gameState.merchantStock : [];
@@ -950,6 +1039,7 @@ function loadFromSlot(slot) {
     const now = Date.now();
     gameState.gameClockStartRealMs = now;
     gameState.gameClockStartMs = now;
+    gameState.lastNeedsTickGameMs = getGameClockMs();
     player.lastActionPointTime = now;
     gameState.lastSurvivalTickRealMs = now;
     gameState.isInBattle = false;
@@ -1091,6 +1181,9 @@ function updateGameMode() {
     document.getElementById('fieldActions').hidden = isBattle || isBase;
     document.getElementById('baseActions').hidden = isBattle || !isBase;
     document.getElementById('baseSection').hidden = !isBase;
+    const equipmentWorkbenchButton = document.getElementById('equipmentWorkbenchButton');
+    const currentBase = gameState.bases[gameState.currentBaseId];
+    equipmentWorkbenchButton.hidden = isBattle || !isBase || !currentBase?.structures.includes('equipment_workbench');
     document.getElementById('battleSection').classList.toggle('active', isBattle);
     const gatherButton = document.getElementById('gatherButton');
     const scene = scenes[gameState.currentScene];
@@ -1164,13 +1257,53 @@ function useInventoryItem() {
 
 function openCraftPanel() {
     if (!player.isAtBase) return;
-    const structures = Object.entries(baseStructures).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
-    const items = Object.entries(itemRecipes).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => `${id}: ${entry.name}（${formatRecipe(entry.recipe)}）`);
-    const id = prompt(`輸入要製作的代碼（僅限根據地）：\n${[...structures, ...items].join('\n')}`, 'wood_bed');
-    if (!id) return;
-    if (baseStructures[id]) constructStructure(id);
-    else if (itemRecipes[id]) craftItem(id);
-    else showMessage('找不到這個配方代碼。');
+    const recipeList = document.getElementById('craftRecipeList');
+    recipeList.replaceChildren();
+    const recipes = [
+        ...Object.entries(baseStructures).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => ['structure', id, entry]),
+        ...Object.entries(itemRecipes).filter(([id]) => isBlueprintUnlocked(id)).map(([id, entry]) => ['item', id, entry])
+    ];
+
+    if (recipes.length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.className = 'panel-note';
+        emptyMessage.textContent = '目前沒有已解鎖的製作配方。';
+        recipeList.appendChild(emptyMessage);
+    }
+
+    recipes.forEach(([type, id, entry]) => {
+        const button = document.createElement('button');
+        button.className = 'save-slot';
+        button.type = 'button';
+
+        const icon = document.createElement('span');
+        icon.className = 'slot-number';
+        icon.textContent = entry.icon || '🛠️';
+
+        const detail = document.createElement('span');
+        detail.className = 'slot-detail';
+        const name = document.createElement('strong');
+        name.textContent = entry.name;
+        const recipe = document.createElement('small');
+        recipe.textContent = formatRecipe(entry.recipe);
+        detail.append(name, recipe);
+
+        const action = document.createElement('span');
+        action.className = 'slot-action';
+        action.textContent = '製作';
+
+        button.append(icon, detail, action);
+        button.addEventListener('click', () => selectCraftRecipe(type, id));
+        recipeList.appendChild(button);
+    });
+
+    openOverlay('craftOverlay');
+}
+
+function selectCraftRecipe(type, id) {
+    closeOverlay('craftOverlay');
+    if (type === 'structure') constructStructure(id);
+    else if (type === 'item') craftItem(id);
 }
 
 function formatRecipe(recipe) {
@@ -1188,7 +1321,7 @@ function craftItem(itemId) {
         showMessage(`素材不足，需要：${formatRecipe(recipe.recipe)}。`);
         return;
     }
-    if (player.inventory.length - Object.values(recipe.recipe).reduce((sum, count) => sum + count, 0) + 1 > player.backpackCapacity) {
+    if (getBackpackSlotsAfterChange(recipe.recipe, [recipe.name]) > player.backpackCapacity) {
         showMessage('背包空間不足，無法收下製作成品。');
         return;
     }
@@ -1201,6 +1334,72 @@ function craftItem(itemId) {
     addSkillExp('construction', 10);
     showMessage(`製作完成：${recipe.icon} ${recipe.name}。`);
     updateUI();
+}
+
+function openEquipmentWorkbench() {
+    const base = gameState.bases[gameState.currentBaseId];
+    if (!player.isAtBase || !base?.structures.includes('equipment_workbench')) {
+        showMessage('需要在已建造裝備製作台的根據地使用。');
+        return;
+    }
+    const recipeList = document.getElementById('equipmentRecipeList');
+    recipeList.replaceChildren();
+    Object.entries(equipmentRecipes).forEach(([id, recipe]) => {
+        const button = document.createElement('button');
+        button.className = 'save-slot';
+        button.type = 'button';
+        const icon = document.createElement('span');
+        icon.className = 'slot-number';
+        icon.textContent = recipe.icon;
+        const detail = document.createElement('span');
+        detail.className = 'slot-detail';
+        const name = document.createElement('strong');
+        name.textContent = recipe.name;
+        const materials = document.createElement('small');
+        materials.textContent = formatRecipe(recipe.recipe);
+        const source = document.createElement('small');
+        source.textContent = recipe.source;
+        detail.append(name, materials, source);
+        const action = document.createElement('span');
+        action.className = 'slot-action';
+        action.textContent = '製作';
+        button.append(icon, detail, action);
+        button.onclick = () => {
+            closeOverlay('equipmentCraftOverlay');
+            craftEquipment(id);
+        };
+        recipeList.appendChild(button);
+    });
+    openOverlay('equipmentCraftOverlay');
+}
+
+function craftEquipment(equipmentId) {
+    const recipe = equipmentRecipes[equipmentId];
+    const base = gameState.bases[gameState.currentBaseId];
+    if (!player.isAtBase || !base?.structures.includes('equipment_workbench') || !recipe) {
+        showMessage('需要在裝備製作台製作裝備。');
+        return;
+    }
+    if (!hasItems(recipe.recipe)) {
+        showMessage(`素材不足，需要：${formatRecipe(recipe.recipe)}。`);
+        return;
+    }
+    if (getBackpackSlotsAfterChange(recipe.recipe, [recipe.name]) > player.backpackCapacity) {
+        showMessage('背包沒有空格收納這種新裝備。');
+        return;
+    }
+    const actionCost = base.structures.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 2;
+    if (!consumeAction(actionCost)) return;
+    const inputQuality = consumeInventoryItems(recipe.recipe);
+    const benchQuality = Number(base.structureQuality?.equipment_workbench) || 0;
+    const outputQuality = getCraftedQuality(inputQuality + benchQuality);
+    if (!addInventoryItem(recipe.name, outputQuality)) {
+        showMessage(`製作完成，但背包已滿，無法收下${recipe.name}。`);
+        return;
+    }
+    addDiscovery(`裝備製作：${recipe.name}`);
+    updateUI();
+    showMessage(`裝備製作完成：${recipe.icon} ${recipe.name}。${recipe.source}`);
 }
 
 function openItemCatalog() {
@@ -1226,6 +1425,9 @@ function getTechPerkDescription(branch, rank) {
     }
     if (branch === 'combat') {
         return `戰鬥攻擊倍率 ×${getTechDamageMultiplier(rank).toFixed(1)}，受到傷害降低 ${Math.min(45, rank * 1.5)}%`;
+    }
+    if (branch === 'backpack') {
+        return `背包容量額外增加 ${Math.floor(rank / 5) * 5} 格`;
     }
     const blueprint = Object.entries(blueprintCatalog).find(([, data]) => data.type === 'structure' && data.techRank === rank);
     return blueprint
@@ -1287,6 +1489,7 @@ function upgradeTechnology(branch) {
     player.techTree.level++;
     player.techTree[branch]++;
     const rank = player.techTree[branch];
+    recalculateBackpackCapacity();
     const unlocked = Object.entries(blueprintCatalog)
         .filter(([, data]) => data.type === 'structure' && branch === 'crafting' && data.techRank === rank)
         .map(([id]) => id);
@@ -1354,6 +1557,16 @@ function ensureMerchantStock() {
     gameState.merchantStockVersion = 2;
     localStorage.setItem(merchantStorageKey, JSON.stringify({ version: 2, date: today, location: gameState.merchantLocation, stock: gameState.merchantStock }));
     return gameState;
+}
+
+function persistMerchantStock() {
+    if (!gameState.merchantStockDate || !gameState.merchantLocation) return;
+    localStorage.setItem(merchantStorageKey, JSON.stringify({
+        version: 2,
+        date: gameState.merchantStockDate,
+        location: gameState.merchantLocation,
+        stock: gameState.merchantStock
+    }));
 }
 
 function openMerchantShop() {
@@ -1442,14 +1655,16 @@ function buyMerchantItem(index, requestedQuantity = 1) {
         showMessage(`金幣不足，需要 ${totalPrice} 金幣。`);
         return;
     }
-    const freeSlots = player.backpackCapacity - player.inventory.length;
-    if (freeSlots < quantity) {
-        showMessage(`背包空間不足，需要 ${quantity} 格，目前只剩 ${freeSlots} 格。`);
+    const requiredSlots = player.inventory.includes(stock.item) ? 0 : 1;
+    const freeSlots = player.backpackCapacity - getBackpackSlotCount();
+    if (freeSlots < requiredSlots) {
+        showMessage(`背包空間不足，需要 ${requiredSlots} 格，目前只剩 ${freeSlots} 格。`);
         return;
     }
     player.gold -= totalPrice;
     for (let count = 0; count < quantity; count++) addInventoryItem(stock.item);
     stock.quantity -= quantity;
+    persistMerchantStock();
     addDiscovery(`商人購買：${stock.item} ×${quantity}`);
     updateUI();
     renderMerchantShop();
@@ -1498,7 +1713,7 @@ function learnBlueprint(itemName) {
 
 // ============= 時間系統 =============
 /**
- * 啟動遊戲時間系統，每小時檢查一次飢餓和疲勞
+ * 啟動遊戲時間系統，並依遊戲時間消耗飽食度與水分
  */
 function startTimeSystem() {
     // 每 10 秒檢查 GMT+8 時段切換及行動值自然回復
@@ -1510,6 +1725,7 @@ function startTimeSystem() {
         }
         resumeGameClock();
         checkHungerSystem();
+        checkNeedsTime();
         checkPeriodTransition();
         checkActionPointRecovery();
         const stockDate = gameState.merchantStockDate;
@@ -1520,9 +1736,13 @@ function startTimeSystem() {
     }, 10000);
 }
 
-function getGMT8Date() {
+function getGameClockMs() {
     const elapsedRealMs = gameState.gameClockPaused ? 0 : Date.now() - gameState.gameClockStartRealMs;
-    const acceleratedNow = gameState.gameClockStartMs + (elapsedRealMs * 24) + (gameState.gameTimeOffsetMs || 0);
+    return gameState.gameClockStartMs + (elapsedRealMs * 24) + (gameState.gameTimeOffsetMs || 0);
+}
+
+function getGMT8Date() {
+    const acceleratedNow = getGameClockMs();
     const parts = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
@@ -1547,7 +1767,11 @@ function resumeGameClock() {
 }
 
 function getCurrentGamePeriod() {
-    const hour = getGMT8Date().hour;
+    return getGamePeriodAtGameMs(getGameClockMs());
+}
+
+function getGamePeriodAtGameMs(gameMs) {
+    const hour = new Date(gameMs + 8 * 60 * 60 * 1000).getUTCHours();
     if (hour >= 6 && hour < 12) return '清晨';
     if (hour >= 12 && hour < 18) return '正午';
     if (hour >= 18) return '傍晚';
@@ -1556,7 +1780,34 @@ function getCurrentGamePeriod() {
 
 function getPeriodTransitionKey() {
     const time = getGMT8Date();
-    return `${time.year}-${time.month}-${time.day}-${time.hour}-${getCurrentGamePeriod()}`;
+    return `${time.year}-${time.month}-${time.day}-${getCurrentGamePeriod()}`;
+}
+
+function countGameDayTransitions(fromGameMs, toGameMs) {
+    const timezoneOffsetMs = 8 * 60 * 60 * 1000;
+    const fromLocal = new Date(fromGameMs + timezoneOffsetMs);
+    const toLocalMs = toGameMs + timezoneOffsetMs;
+    const firstSunrise = new Date(fromLocal);
+    firstSunrise.setUTCHours(6, 0, 0, 0);
+    if (firstSunrise.getTime() <= fromGameMs + timezoneOffsetMs) {
+        firstSunrise.setUTCDate(firstSunrise.getUTCDate() + 1);
+    }
+    if (firstSunrise.getTime() > toLocalMs) return 0;
+    return Math.floor((toLocalMs - firstSunrise.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+}
+
+function advanceGameClockTo(targetGameMs, consumeTimedNeeds = true) {
+    const currentGameMs = getGameClockMs();
+    if (targetGameMs <= currentGameMs) return;
+    if (consumeTimedNeeds) {
+        checkNeedsTime(targetGameMs);
+    } else {
+        gameState.lastNeedsTickGameMs = targetGameMs;
+    }
+    gameState.gameDay += countGameDayTransitions(currentGameMs, targetGameMs);
+    gameState.gameTimeOffsetMs += targetGameMs - currentGameMs;
+    gameState.lastPeriod = getCurrentGamePeriod();
+    gameState.periodTransitionKey = getPeriodTransitionKey();
 }
 
 function checkPeriodTransition() {
@@ -1574,20 +1825,53 @@ function checkPeriodTransition() {
     gameState.lastPeriod = currentPeriod;
     if (previousPeriod === '夜晚' && currentPeriod === '清晨') gameState.gameDay++;
 
-    player.hunger = Math.max(0, player.hunger - gameRules.periodNeedsCost);
-    player.thirst = Math.max(0, player.thirst - gameRules.periodNeedsCost);
-    player.fatigue = Math.min(player.maxFatigue, player.fatigue + gameRules.periodNeedsCost);
-    addDiscovery(`進入${currentPeriod}：飽食 -20、飲水 -20、疲勞 +20`);
-    enforceNeedsReturn();
     updateUI();
 }
 
-function enforceNeedsReturn() {
-    if (player.fatigue >= player.maxFatigue) {
-        forceReturnToBase('疲勞達上限');
-        return false;
+function checkNeedsTime(nowGameMs = getGameClockMs()) {
+    if (!Number.isFinite(gameState.lastNeedsTickGameMs)) {
+        gameState.lastNeedsTickGameMs = nowGameMs;
+        return;
     }
-    return true;
+
+    const tickMs = gameRules.needsTickMinutes * 60 * 1000;
+    const firstTickMs = gameState.lastNeedsTickGameMs + tickMs;
+    const elapsedTicks = Math.floor((nowGameMs - gameState.lastNeedsTickGameMs) / tickMs);
+    if (elapsedTicks <= 0) return;
+
+    gameState.lastNeedsTickGameMs += elapsedTicks * tickMs;
+    let hungerCost = 0;
+    let thirstCost = 0;
+    const isOutdoors = !player.isAtBase;
+    for (let tick = 0; tick < elapsedTicks; tick++) {
+        const period = getGamePeriodAtGameMs(firstTickMs + tick * tickMs);
+        hungerCost += isOutdoors && period === '傍晚' ? 2 : 1;
+        thirstCost += isOutdoors && period === '正午' ? 2 : 1;
+    }
+    player.hunger = Math.max(0, player.hunger - hungerCost);
+    player.thirst = Math.max(0, player.thirst - thirstCost);
+    addDiscovery(`遊戲時間經過 ${elapsedTicks * gameRules.needsTickMinutes} 分鐘：飽食 -${hungerCost}、飲水 -${thirstCost}`);
+    enforceNeedsReturn();
+}
+
+function getNeedsReturnReason() {
+    return player.thirst <= 0 ? '水分耗盡'
+        : player.hunger <= 0 ? '飽食度耗盡'
+            : player.fatigue >= player.maxFatigue ? '疲勞達上限'
+                : null;
+}
+
+function enforceNeedsReturn() {
+    const reason = getNeedsReturnReason();
+    if (!reason) return true;
+
+    const isAtBase = player.isAtBase
+        && Boolean(player.baseLocation)
+        && gameState.currentScene === player.baseLocation;
+    if (isAtBase) return true;
+
+    forceReturnToBase(reason);
+    return false;
 }
 
 function forceReturnToBase(reason) {
@@ -1599,7 +1883,7 @@ function forceReturnToBase(reason) {
     updateUI();
 }
 
-function consumeAction(actionCost = 1, fatigue = 0, allowDuringBattle = false) {
+function consumeAction(actionCost = 1, fatigue = gameRules.actionFatigueGain, allowDuringBattle = false, outdoorAction = !player.isAtBase) {
     if (gameState.isInBattle && !allowDuringBattle) {
         showMessage('⚔️ 戰鬥中不能進行其他行動。');
         return false;
@@ -1610,15 +1894,17 @@ function consumeAction(actionCost = 1, fatigue = 0, allowDuringBattle = false) {
         return false;
     }
     player.actionPoints -= actionCost;
-    const mayContinue = consumeNeedsOnly(fatigue);
+    const mayContinue = applyActionFatigue(fatigue, outdoorAction);
     updateUI();
     return mayContinue;
 }
 
-function consumeNeedsOnly(fatigue = 0) {
-    player.hunger = Math.max(0, player.hunger - gameRules.actionNeedsCost);
-    player.thirst = Math.max(0, player.thirst - gameRules.actionNeedsCost);
-    player.fatigue = Math.min(player.maxFatigue, player.fatigue + fatigue);
+function getActionFatigueAmount(fatigue = gameRules.actionFatigueGain, outdoorAction = !player.isAtBase) {
+    return fatigue > 0 && outdoorAction && getCurrentGamePeriod() === '夜晚' ? fatigue * 2 : fatigue;
+}
+
+function applyActionFatigue(fatigue = gameRules.actionFatigueGain, outdoorAction = !player.isAtBase) {
+    player.fatigue = Math.min(player.maxFatigue, player.fatigue + getActionFatigueAmount(fatigue, outdoorAction));
     return enforceNeedsReturn();
 }
 
@@ -1640,6 +1926,20 @@ function hasItems(required) {
     );
 }
 
+function getBackpackSlotCount() {
+    return new Set(player.inventory).size;
+}
+
+function getBackpackSlotsAfterChange(consumedItems = {}, addedItems = []) {
+    const remainingItems = new Map();
+    player.inventory.forEach(item => remainingItems.set(item, (remainingItems.get(item) || 0) + 1));
+    Object.entries(consumedItems).forEach(([item, quantity]) => {
+        remainingItems.set(item, Math.max(0, (remainingItems.get(item) || 0) - quantity));
+    });
+    addedItems.forEach(item => remainingItems.set(item, (remainingItems.get(item) || 0) + 1));
+    return [...remainingItems.values()].filter(quantity => quantity > 0).length;
+}
+
 function ensureInventoryQuality() {
     if (!Array.isArray(player.inventoryQuality)) player.inventoryQuality = [];
     player.inventoryQuality = player.inventoryQuality.slice(0, player.inventory.length);
@@ -1651,7 +1951,7 @@ function removeInventoryAt(index) {
     ensureInventoryQuality();
     const item = player.inventory.splice(index, 1)[0];
     const quality = player.inventoryQuality.splice(index, 1)[0] || 0;
-    player.currentBackpackUsage = player.inventory.length;
+    player.currentBackpackUsage = getBackpackSlotCount();
     return { item, quality };
 }
 
@@ -1667,7 +1967,7 @@ function consumeInventoryItems(required) {
             }
         }
     }
-    player.currentBackpackUsage = player.inventory.length;
+    player.currentBackpackUsage = getBackpackSlotCount();
     return removedCount ? qualityTotal / removedCount : 0;
 }
 
@@ -1678,11 +1978,11 @@ function poisonPlayer(reason) {
 }
 
 function addInventoryItem(item, quality = 0) {
-    if (player.inventory.length >= player.backpackCapacity) return false;
+    if (!player.inventory.includes(item) && getBackpackSlotCount() >= player.backpackCapacity) return false;
     ensureInventoryQuality();
     player.inventory.push(item);
     player.inventoryQuality.push(Math.max(0, Math.min(1, Number(quality) || 0)));
-    player.currentBackpackUsage = player.inventory.length;
+    player.currentBackpackUsage = getBackpackSlotCount();
     return true;
 }
 
@@ -1700,6 +2000,158 @@ function getInventoryQuality(index) {
 
 function getTechBranchRank(branch) {
     return Math.max(0, Math.min(30, Number(player.techTree?.[branch]) || 0));
+}
+
+function getEquipmentBonuses(equipment = player.equipment) {
+    const bonuses = { attack: 0, defense: 0, speed: 0, crit: 0, critDmg: 0 };
+    const items = [equipment?.weapon, equipment?.armor, equipment?.shoes, ...(equipment?.accessories || [])];
+    items.forEach(item => {
+        const stats = equipmentCatalog[item]?.stats || {};
+        Object.keys(bonuses).forEach(stat => {
+            bonuses[stat] += Number(stats[stat]) || 0;
+        });
+    });
+    return bonuses;
+}
+
+function getBackpackTechBonus() {
+    return Math.floor(getTechBranchRank('backpack') / 5) * 5;
+}
+
+function getBackpackCapacityForEquipment(equipment) {
+    const backpackAccessories = (equipment?.accessories || [])
+        .filter(item => equipmentCatalog[item]?.special === 'backpack').length;
+    return (Number(player.baseBackpackCapacity) || 20)
+        + getBackpackTechBonus()
+        + backpackAccessories * 10;
+}
+
+function recalculateBackpackCapacity() {
+    player.backpackCapacity = getBackpackCapacityForEquipment(player.equipment);
+    player.currentBackpackUsage = getBackpackSlotCount();
+}
+
+function recalculatePlayerStats() {
+    const base = player.baseStats || {
+        attack: player.attack,
+        defense: player.defense,
+        speed: player.speed,
+        crit: player.crit,
+        critDmg: player.critDmg
+    };
+    player.baseStats = { ...base };
+    const bonuses = getEquipmentBonuses();
+    player.attack = Math.max(1, player.baseStats.attack + bonuses.attack);
+    player.defense = Math.max(0, player.baseStats.defense + bonuses.defense);
+    player.speed = Math.max(1, player.baseStats.speed + bonuses.speed);
+    player.crit = Math.max(0, Math.min(100, player.baseStats.crit + bonuses.crit));
+    player.critDmg = Math.max(100, player.baseStats.critDmg + bonuses.critDmg);
+    recalculateBackpackCapacity();
+}
+
+function hasEquippedSpecial(special) {
+    return [player.equipment?.weapon, player.equipment?.armor, player.equipment?.shoes, ...(player.equipment?.accessories || [])]
+        .some(item => equipmentCatalog[item]?.special === special);
+}
+
+function equipItem(item) {
+    const definition = equipmentCatalog[item];
+    const inventoryIndex = player.inventory.indexOf(item);
+    if (!definition || inventoryIndex < 0) {
+        showMessage('背包中沒有可裝備的這件物品。');
+        return;
+    }
+    if (gameState.isInBattle) {
+        showMessage('戰鬥中無法更換裝備。');
+        return;
+    }
+
+    let slot = definition.slot;
+    let accessoryIndex = -1;
+    if (slot === 'accessory') {
+        accessoryIndex = player.equipment.accessories.findIndex(equipped => !equipped);
+        if (accessoryIndex < 0) {
+            showMessage('兩個飾品欄都已裝備，請先卸下一個飾品。');
+            return;
+        }
+        slot = 'accessories';
+    }
+    const previousItem = slot === 'accessories'
+        ? player.equipment.accessories[accessoryIndex]
+        : player.equipment[slot];
+    const outputs = previousItem ? [previousItem] : [];
+    if (getBackpackSlotsAfterChange({ [item]: 1 }, outputs) > player.backpackCapacity) {
+        showMessage('背包沒有空格收納替換下來的裝備。');
+        return;
+    }
+
+    removeInventoryAt(inventoryIndex);
+    if (previousItem) addInventoryItem(previousItem);
+    if (slot === 'accessories') player.equipment.accessories[accessoryIndex] = item;
+    else player.equipment[slot] = item;
+    recalculatePlayerStats();
+    updateUI();
+    showMessage(`已裝備：${item}。`);
+}
+
+function unequipItem(slot, accessoryIndex = -1) {
+    const item = slot === 'accessories'
+        ? player.equipment.accessories[accessoryIndex]
+        : player.equipment[slot];
+    if (!item) return;
+    const nextEquipment = {
+        ...player.equipment,
+        accessories: [...player.equipment.accessories]
+    };
+    if (slot === 'accessories') nextEquipment.accessories[accessoryIndex] = null;
+    else nextEquipment[slot] = null;
+    if (getBackpackSlotsAfterChange({}, [item]) > getBackpackCapacityForEquipment(nextEquipment)) {
+        showMessage('卸下這個背包飾品後，背包格數不足以收納所有道具。');
+        return;
+    }
+    if (!addInventoryItem(item)) {
+        showMessage('背包已滿，無法卸下這件新種類的裝備。');
+        return;
+    }
+    if (slot === 'accessories') player.equipment.accessories[accessoryIndex] = null;
+    else player.equipment[slot] = null;
+    recalculatePlayerStats();
+    updateUI();
+    showMessage(`已卸下：${item}。`);
+}
+
+function renderEquipmentSlots() {
+    const container = document.getElementById('equipment');
+    if (!container) return;
+    container.replaceChildren();
+    const slots = [
+        ['weapon', '武器', player.equipment.weapon],
+        ['armor', '防具', player.equipment.armor],
+        ['shoes', '鞋子', player.equipment.shoes],
+        ['accessories', '飾品 1', player.equipment.accessories[0], 0],
+        ['accessories', '飾品 2', player.equipment.accessories[1], 1]
+    ];
+    slots.forEach(([slot, label, item, accessoryIndex]) => {
+        const row = document.createElement('div');
+        row.className = 'equipment-slot';
+        const detail = document.createElement('span');
+        const stats = equipmentCatalog[item]?.stats || {};
+        const statNames = { attack: '攻擊', defense: '防禦', speed: '速度', crit: '爆擊', critDmg: '爆傷' };
+        const statText = Object.entries(stats).map(([stat, value]) => `${statNames[stat]} ${value > 0 ? '+' : ''}${value}${stat === 'crit' ? '%' : ''}`).join('、');
+        const specialText = equipmentCatalog[item]?.special === 'backpack' ? '背包容量 +10' :
+            equipmentCatalog[item]?.special === 'outdoorRest' ? '可在野外休息' : '';
+        detail.textContent = `${label}：${item || '未裝備'}${statText ? ` · ${statText}` : ''}${specialText ? ` · ${specialText}` : ''}`;
+        row.appendChild(detail);
+        if (item) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'secondary-button';
+            button.textContent = '卸下';
+            button.onclick = () => unequipItem(slot, accessoryIndex ?? -1);
+            row.appendChild(button);
+        }
+        container.appendChild(row);
+    });
 }
 
 function getGatheringQuality() {
@@ -1822,14 +2274,17 @@ function move(direction) {
         return;
     }
 
+    const isAtBase = player.isAtBase && gameState.currentScene === player.baseLocation;
+    if (isAtBase && nextSceneName !== player.baseLocation && getNeedsReturnReason()) return;
+
     const base = gameState.bases[gameState.currentBaseId];
-    const actionCost = base.structures.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 2;
-    if (!consumeAction(actionCost)) return;
-    const inputQuality = consumeInventoryItems(recipe.recipe);
-    const outputQuality = getCraftedQuality(inputQuality + (base.structures.includes('smokehouse') ? 0.1 : 0));
-    addInventoryItem(recipe.name, outputQuality);
+    const actionCost = base?.structures?.includes('boiler') || getTechBranchRank('crafting') >= 10 ? 1 : 2;
+    const outdoorAction = !isAtBase || nextSceneName !== player.baseLocation;
+    if (!consumeAction(actionCost, gameRules.movementFatigueGain, false, outdoorAction)) return;
+
+    gameState.currentScene = nextSceneName;
     player.isAtBase = Boolean(player.baseLocation && nextSceneName === player.baseLocation);
-    showMessage(`製作完成：${recipe.icon} ${recipe.name}${outputQuality ? `（品質效果 +${Math.round(outputQuality * 100)}%）` : ''}。`);
+    showScene(nextSceneName);
 
     // 每次進入場景只檢查一次 1/20 機率，依目標場景的敵人設定。
     const entryKey = `${nextSceneName}:${Date.now()}`;
@@ -1967,7 +2422,7 @@ function sleepAtBase() {
         return;
     }
 
-    if (!consumeAction(3)) return;
+    if (!consumeAction(3, 0)) return;
     const baseBedRecovery = currentBase.structures.reduce((best, structure) =>
         Math.max(best, ({ grass_mat: 40, wood_bed: 60, spring_bed: 80 })[structure] || 0), 20);
     const restBonus = (currentBase.structures.includes('advanced_cabin') ? 0.3 : 0)
@@ -1975,22 +2430,24 @@ function sleepAtBase() {
     const bedRecovery = Math.round(baseBedRecovery * (1 + restBonus));
     player.fatigue = Math.max(0, player.fatigue - bedRecovery);
     player.hp = Math.min(player.hp + 20, player.maxHp);
-    player.hunger = Math.max(1, player.hunger);
-    player.thirst = Math.max(1, player.thirst);
+    // Advance to the period after the next boundary; sleep uses a fixed needs cost.
+    const virtualNowMs = getGameClockMs();
+    const timezoneOffsetMs = 8 * 60 * 60 * 1000;
+    const currentLocal = new Date(virtualNowMs + timezoneOffsetMs);
+    const nextBoundaryHour = (Math.floor(currentLocal.getUTCHours() / 6) + 1) * 6;
+    const nextBoundary = new Date(currentLocal);
+    if (nextBoundaryHour >= 24) {
+        nextBoundary.setUTCDate(nextBoundary.getUTCDate() + 1);
+        nextBoundary.setUTCHours(0, 0, 0, 0);
+    } else {
+        nextBoundary.setUTCHours(nextBoundaryHour, 0, 0, 0);
+    }
+    const targetMs = nextBoundary.getTime() - timezoneOffsetMs + 6 * 60 * 60 * 1000;
+    advanceGameClockTo(targetMs, false);
+    player.hunger = Math.max(0, player.hunger - 20);
+    player.thirst = Math.max(0, player.thirst - 20);
 
-    // 遊戲的一日等於實時一小時；睡眠直接推進至下一個整點後的清晨（01 分）。
-    const elapsedRealMs = Date.now() - gameState.gameClockStartRealMs;
-    const virtualNowMs = gameState.gameClockStartMs + (elapsedRealMs * 24) + (gameState.gameTimeOffsetMs || 0);
-    const now = new Date(virtualNowMs);
-    const target = new Date(now);
-    target.setDate(target.getDate() + 1);
-    target.setHours(0, 1, 0, 0);
-    gameState.gameTimeOffsetMs += target.getTime() - virtualNowMs;
-    gameState.gameDay++;
-    gameState.lastPeriod = '清晨';
-    gameState.periodTransitionKey = getPeriodTransitionKey();
-
-    showMessage(`😴 睡眠完成，疲勞降低 ${bedRecovery} 點，血量恢復 20。時間已推進至隔天清晨。`);
+    showMessage(`😴 睡眠完成，疲勞降低 ${bedRecovery} 點，血量恢復 20；飽食 -20、水分 -20。時間已推進兩個時段。`);
     updateUI();
 }
 
@@ -2104,9 +2561,10 @@ function cookAtBase(recipeKey) {
         showMessage(`素材不足，需要：${formatRecipe(recipe.input)}。`);
         return;
     }
-    const inputCount = Object.values(recipe.input).reduce((sum, count) => sum + count, 0);
-    const outputCount = recipe.output.length + (recipeKey === 'seaWater' && base.structures.includes('saltMaker') ? 1 : 0);
-    if (player.inventory.length - inputCount + outputCount > player.backpackCapacity) {
+    const outputs = recipeKey === 'seaWater' && base.structures.includes('saltMaker')
+        ? [...recipe.output, '鹽']
+        : recipe.output;
+    if (getBackpackSlotsAfterChange(recipe.input, outputs) > player.backpackCapacity) {
         showMessage('背包空間不足，無法收下料理成品。');
         return;
     }
@@ -2116,9 +2574,6 @@ function cookAtBase(recipeKey) {
     const outputQuality = getCraftedQuality(inputQuality
         + (base.structures.includes('smokehouse') ? 0.1 : 0)
         + (base.structures.includes('master_kitchen') ? 0.2 : 0));
-    const outputs = recipeKey === 'seaWater' && base.structures.includes('saltMaker')
-        ? [...recipe.output, '鹽']
-        : recipe.output;
     outputs.forEach(item => addInventoryItem(item, outputQuality));
     if (recipe.thirstGain) player.thirst = Math.min(player.maxThirst, player.thirst + Math.round(recipe.thirstGain * (1 + outputQuality)));
     showMessage(`🔥 烹煮完成：${recipe.message}`);
@@ -2166,6 +2621,7 @@ function returnToBase() {
         showMessage('⚠️ 還沒有建造根據地！');
         return;
     }
+    if (player.isAtBase && gameState.currentScene === player.baseLocation) return;
     
     if (!consumeAction(10)) return;
     player.isAtBase = true;
@@ -2200,7 +2656,6 @@ function goExplore() {
     }
     
     const randomDir = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-    player.isAtBase = false;
     move(randomDir);
 }
 
@@ -2208,14 +2663,14 @@ function goExplore() {
  * 檢查背包是否有空間
  */
 function canAddItemToBackpack() {
-    return player.currentBackpackUsage < player.backpackCapacity;
+    return getBackpackSlotCount() < player.backpackCapacity;
 }
 
 /**
  * 將物品添加到背包
  */
 function addItemToBackpack(item) {
-    if (!canAddItemToBackpack()) {
+    if (!player.inventory.includes(item) && !canAddItemToBackpack()) {
         return false;
     }
     return addInventoryItem(item);
@@ -2225,31 +2680,65 @@ function addItemToBackpack(item) {
  * 將物品從背包移到根據地
  */
 function moveItemToBase(itemIndex) {
+    const item = player.inventory[itemIndex];
+    if (!item) return showMessage('⚠️ 物品不存在！');
+    moveItemsToBase(item, 1);
+}
+
+function getBaseStorageCapacity(base) {
+    return base.structures.includes('pot') ? 20000 : 10000;
+}
+
+function moveItemsToBase(item, requestedQuantity) {
     if (!player.isAtBase || !gameState.currentBaseId) {
         showMessage('⚠️ 必須在根據地內才能進行此操作！');
         return;
     }
-    
+    if (item === '地圖') {
+        showMessage('地圖不能存入倉庫。');
+        return;
+    }
     const base = gameState.bases[gameState.currentBaseId];
-    const item = player.inventory[itemIndex];
-    
-    if (!item) {
-        showMessage('⚠️ 物品不存在！');
+    const available = player.inventory.filter(owned => owned === item).length;
+    const quantity = Math.min(available, Math.max(0, Math.floor(Number(requestedQuantity) || 0)));
+    const storageSpace = getBaseStorageCapacity(base) - base.storage.length;
+    const transferQuantity = Math.min(quantity, storageSpace);
+    if (!transferQuantity) {
+        showMessage(storageSpace <= 0 ? '⚠️ 根據地倉庫已滿！' : '請選擇有效的存入數量。');
         return;
     }
-    
-    // 檢查根據地存儲空間（系統上限）
-    const storageCapacity = base.structures.includes('pot') ? 20000 : 10000;
-    if (base.storage.length >= storageCapacity) {
-        showMessage('⚠️ 根據地存儲空間已滿！');
-        return;
+    for (let count = 0; count < transferQuantity; count++) {
+        const index = player.inventory.indexOf(item);
+        const removed = removeInventoryAt(index);
+        addBaseStorageItem(base, item, removed?.quality || 0);
     }
-    
-    const removed = removeInventoryAt(itemIndex);
-    addBaseStorageItem(base, item, removed?.quality || 0);
-    
-    showMessage(`✓ 將 ${item} 移入根據地。`);
     updateUI();
+    showMessage(`✓ 已將 ${item} ×${transferQuantity} 存入根據地倉庫。${transferQuantity < quantity ? '倉庫空間不足，部分物品仍留在背包。' : ''}`);
+}
+
+function transferAllToBase() {
+    if (!player.isAtBase || !gameState.currentBaseId) {
+        showMessage('⚠️ 必須在根據地內才能進行此操作！');
+        return;
+    }
+    const base = gameState.bases[gameState.currentBaseId];
+    let remainingSpace = getBaseStorageCapacity(base) - base.storage.length;
+    if (remainingSpace <= 0) {
+        showMessage('⚠️ 根據地倉庫已滿！');
+        return;
+    }
+    let transferred = 0;
+    for (let index = player.inventory.length - 1; index >= 0 && remainingSpace > 0; index--) {
+        const item = player.inventory[index];
+        if (item === '地圖') continue;
+        const removed = removeInventoryAt(index);
+        addBaseStorageItem(base, item, removed?.quality || 0);
+        transferred++;
+        remainingSpace--;
+    }
+    const remainingItems = player.inventory.filter(item => item !== '地圖').length;
+    updateUI();
+    showMessage(`✓ 已將 ${transferred} 件物品存入根據地倉庫。${remainingItems ? `倉庫空間不足，${remainingItems} 件物品仍留在背包。` : ''}`);
 }
 
 /**
@@ -2269,33 +2758,35 @@ function takeItemFromBase(itemIndex) {
         return;
     }
     
-    if (!canAddItemToBackpack()) {
-        showMessage('⚠️ 背包滿了！無法取出。');
-        return;
-    }
-    
-    if (!Array.isArray(base.storageQuality)) base.storageQuality = [];
-    while (base.storageQuality.length < base.storage.length) base.storageQuality.push(0);
-    const quality = base.storageQuality.splice(itemIndex, 1)[0] || 0;
-    addInventoryItem(item, quality);
-    base.storage.splice(itemIndex, 1);
-    
-    showMessage(`✓ 將 ${item} 取出。`);
-    updateUI();
+    takeItemsFromBase(item, 1);
 }
 
-/**
- * 獲取不同背包類型的容量
- */
-function getBackpackCapacity(backpackType) {
-    const capacities = {
-        basic: 10,
-        cloth: 20,
-        leather: 30,
-        iron: 50,
-        rare: 100
-    };
-    return capacities[backpackType] || 10;
+function takeItemsFromBase(item, requestedQuantity) {
+    if (!player.isAtBase || !gameState.currentBaseId) {
+        showMessage('⚠️ 必須在根據地內才能進行此操作！');
+        return;
+    }
+    const base = gameState.bases[gameState.currentBaseId];
+    const available = base.storage.filter(owned => owned === item).length;
+    const quantity = Math.min(available, Math.max(0, Math.floor(Number(requestedQuantity) || 0)));
+    if (!quantity) {
+        showMessage('倉庫中沒有可取出的這項物品。');
+        return;
+    }
+    if (!player.inventory.includes(item) && getBackpackSlotCount() >= player.backpackCapacity) {
+        showMessage('⚠️ 背包已滿，無法收下新的道具種類。');
+        return;
+    }
+    if (!Array.isArray(base.storageQuality)) base.storageQuality = [];
+    while (base.storageQuality.length < base.storage.length) base.storageQuality.push(0);
+    for (let count = 0; count < quantity; count++) {
+        const index = base.storage.indexOf(item);
+        const quality = base.storageQuality.splice(index, 1)[0] || 0;
+        base.storage.splice(index, 1);
+        addInventoryItem(item, quality);
+    }
+    updateUI();
+    showMessage(`✓ 已將 ${item} ×${quantity} 從倉庫取出至背包。`);
 }
 
 /**
@@ -2471,6 +2962,33 @@ function generateBaseResources() {
     }
 }
 
+function countItemsByName(items) {
+    const counts = new Map();
+    items.forEach(item => counts.set(item, (counts.get(item) || 0) + 1));
+    return counts;
+}
+
+function createStorageTransferRow(item, count, actionLabel, transfer, disabled = false) {
+    const row = document.createElement('div');
+    row.className = 'storage-transfer-row';
+    const label = document.createElement('span');
+    label.textContent = `${item} ×${count}`;
+    const quantity = document.createElement('input');
+    quantity.type = 'number';
+    quantity.min = '1';
+    quantity.max = String(count);
+    quantity.value = '1';
+    quantity.setAttribute('aria-label', `${item} 數量`);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'secondary-button';
+    button.textContent = actionLabel;
+    button.disabled = disabled;
+    button.onclick = () => transfer(item, quantity.value);
+    row.append(label, quantity, button);
+    return row;
+}
+
 /**
  * 更新根據地UI顯示
  */
@@ -2500,19 +3018,50 @@ function updateBaseUI() {
     `;
     if (baseInfo) baseInfo.innerHTML = infoHTML;
     
-    // 更新根據地存儲
-    const storageCapacity = base.structures.includes('pot') ? 20000 : 10000;
-    let storageHTML = `<strong>根據地存儲 ${base.storage.length}/${storageCapacity}：</strong><br>`;
-    if (base.storage.length === 0) {
-        storageHTML += '<span style="color: #aaa;">空的</span>';
+    if (!baseStorage) return;
+    base.storage = Array.isArray(base.storage) ? base.storage : [];
+    base.storageQuality = Array.isArray(base.storageQuality) ? base.storageQuality : [];
+    const storageCapacity = getBaseStorageCapacity(base);
+    baseStorage.replaceChildren();
+
+    const title = document.createElement('strong');
+    title.textContent = `根據地倉庫 ${base.storage.length}/${storageCapacity}`;
+    baseStorage.appendChild(title);
+    const depositAll = document.createElement('button');
+    depositAll.type = 'button';
+    depositAll.className = 'secondary-button';
+    depositAll.textContent = '全部存入倉庫（保留地圖）';
+    depositAll.onclick = transferAllToBase;
+    baseStorage.appendChild(depositAll);
+
+    const backpackHeading = document.createElement('h3');
+    backpackHeading.textContent = '背包道具：選擇要存入的數量';
+    baseStorage.appendChild(backpackHeading);
+    const backpackItems = [...countItemsByName(player.inventory)].filter(([item]) => item !== '地圖');
+    if (!backpackItems.length) {
+        const emptyBackpack = document.createElement('p');
+        emptyBackpack.textContent = '沒有可存入的道具。';
+        baseStorage.appendChild(emptyBackpack);
     } else {
-        base.storage.forEach((item, index) => {
-            storageHTML += `<div style="display: inline-block; background: #d4af37; color: #000; padding: 3px 8px; margin: 2px; border-radius: 3px; font-size: 11px;">
-                ${item}
-            </div>`;
+        backpackItems.forEach(([item, count]) => {
+            baseStorage.appendChild(createStorageTransferRow(item, count, '存入', moveItemsToBase));
         });
     }
-    if (baseStorage) baseStorage.innerHTML = storageHTML;
+
+    const storageHeading = document.createElement('h3');
+    storageHeading.textContent = '倉庫內容：選擇要取回的數量';
+    baseStorage.appendChild(storageHeading);
+    if (!base.storage.length) {
+        const emptyStorage = document.createElement('p');
+        emptyStorage.textContent = '倉庫目前是空的。';
+        baseStorage.appendChild(emptyStorage);
+    } else {
+        countItemsByName(base.storage).forEach((count, item) => {
+            const needsSlot = !player.inventory.includes(item);
+            const noRoom = needsSlot && getBackpackSlotCount() >= player.backpackCapacity;
+            baseStorage.appendChild(createStorageTransferRow(item, count, '取出', takeItemsFromBase, noRoom));
+        });
+    }
 }
 
 // ============= 場景顯示 =============
@@ -2585,7 +3134,7 @@ function exploreScene() {
         return;
     }
 
-    // 探索消耗 3 行動值，飽食/水分各 5，疲勞增加 5。
+    // 探索消耗 3 行動值並增加 5 點疲勞。
     const actionCost = gameRules.explorationActionCost;
     if (!consumeAction(actionCost, gameRules.explorationFatigueGain)) return;
     
@@ -2668,24 +3217,32 @@ function pickupItem() {
     }
 
     const item = scene.items[0];
-    if (!player.inventory.includes(item)) {
-        if (!consumeAction(1)) return;
-        if (!addInventoryItem(item)) {
-            showMessage('⚠️ 背包已滿，無法拾取。');
-            return;
-        }
-        showMessage(`✓ 拾取了 ${item}！`);
-        updateUI();
+    if (!consumeAction(1)) return;
+    if (!addInventoryItem(item)) {
+        showMessage('⚠️ 背包已滿，無法拾取。');
+        return;
     }
+    showMessage(`✓ 拾取了 ${item}！`);
+    updateUI();
 }
 
 // ============= 休息系統 =============
 function rest() {
-    if (!consumeAction(gameRules.restActionCost)) return;
+    const isOutdoors = !player.isAtBase;
+    if (isOutdoors && !hasEquippedSpecial('outdoorRest')) {
+        showMessage('野外休息需要裝備小型睡袋。');
+        return;
+    }
+    const actionCost = isOutdoors ? gameRules.outdoorRestActionCost : gameRules.restActionCost;
+    if (!consumeAction(actionCost, 0)) return;
+    if (isOutdoors) advanceGameClockTo(getGameClockMs() + gameRules.gamePeriodMs);
     const oldFatigue = player.fatigue;
-    player.fatigue = Math.max(0, player.fatigue - gameRules.restFatigueRecovery);
+    const recovery = isOutdoors ? gameRules.outdoorRestFatigueRecovery : gameRules.restFatigueRecovery;
+    player.fatigue = Math.max(0, player.fatigue - recovery);
     const reduced = oldFatigue - player.fatigue;
-    showMessage(`😌 休息完成，疲勞降低 ${reduced} 點（最多 15 點）。`);
+    showMessage(isOutdoors
+        ? `😌 野外休息完成，消耗 ${actionCost} 行動值，時間推進一個時段，疲勞降低 ${reduced} 點（最多 20 點）。`
+        : `😌 休息完成，疲勞降低 ${reduced} 點（最多 15 點）。`);
     updateUI();
 }
 
@@ -2802,10 +3359,11 @@ function playerAttack(type, skillIndex = 0) {
         }
     }
 
-    if (!consumeNeedsOnly()) return;
+    const fatigueGain = getActionFatigueAmount(gameRules.actionFatigueGain);
+    if (!applyActionFatigue(gameRules.actionFatigueGain)) return;
 
     enemy.hp -= damage;
-    addBattleLog(`你使用了 ${skillName}！造成 ${damage} 點傷害！（飽食度 -5、水分 -5）`, 'player');
+    addBattleLog(`你使用了 ${skillName}！造成 ${damage} 點傷害！（疲勞 +${fatigueGain}）`, 'player');
     updateBattleUI();
 
     if (enemy.hp <= 0) {
@@ -2819,9 +3377,10 @@ function playerAttack(type, skillIndex = 0) {
 }
 
 function playerDefend() {
-    if (!consumeNeedsOnly()) return;
+    const fatigueGain = getActionFatigueAmount(gameRules.actionFatigueGain);
+    if (!applyActionFatigue(gameRules.actionFatigueGain)) return;
     gameState.playerDefending = true;
-    addBattleLog(`你進入防守姿態，傷害減少 50%！`, 'player');
+    addBattleLog(`你進入防守姿態，疲勞 +${fatigueGain}，傷害減少 50%！`, 'player');
 
     setTimeout(() => {
         enemyAttack();
@@ -2835,12 +3394,13 @@ function useItem() {
         return;
     }
 
+    const fatigueGain = getActionFatigueAmount(gameRules.actionFatigueGain);
+    if (!applyActionFatigue(gameRules.actionFatigueGain)) return;
     const healAmount = 50;
     player.hp = Math.min(player.hp + healAmount, player.maxHp);
     removeInventoryAt(player.inventory.indexOf(healItem));
-    if (!consumeNeedsOnly()) return;
     
-    addBattleLog(`使用了 ${healItem}，恢復 ${healAmount} 點血量！（戰鬥不消耗行動值）`, 'player');
+    addBattleLog(`使用了 ${healItem}，恢復 ${healAmount} 點血量，疲勞 +${fatigueGain}！（戰鬥不消耗行動值）`, 'player');
     updateBattleUI();
     updateUI();
 
@@ -2851,7 +3411,7 @@ function useItem() {
 
 function attemptEscape() {
     if (!gameState.isInBattle) return;
-    if (!consumeAction(3, 0, true)) return;
+    if (!consumeAction(3, gameRules.actionFatigueGain, true)) return;
     if (Math.random() < gameRules.escapeChance) {
         addBattleLog('🏃 逃跑成功，怪物消失了。', 'system');
         endBattle();
@@ -2910,14 +3470,22 @@ function battleWin() {
     player.exp += expGain;
     player.gold = Math.max(0, Number(player.gold) || 0) + goldGain;
 
-    if (Math.random() < gameRules.rawMeatDropChance && addInventoryItem('生肉')) {
-        addBattleLog('🍖 獲得素材：生肉。生肉可以食用，但有中毒風險。', 'system');
+    if (Math.random() < gameRules.rawMeatDropChance) {
+        if (addInventoryItem('生肉')) {
+            addBattleLog('🍖 獲得素材：生肉。生肉可以食用，但有中毒風險。', 'system');
+        } else {
+            addBattleLog('🎒 背包已滿，無法攜帶生肉。', 'system');
+        }
     }
     const materials = [...new Set([...(enemy.drops || []), ...(scenes[gameState.currentScene]?.drops || [])])].filter(item => item !== '生肉' && item !== '金幣');
     if (materials.length && Math.random() < (enemy.drops?.length ? 0.65 : 0.5)) {
         const material = materials[Math.floor(Math.random() * materials.length)];
         const quality = Math.min(1, enemy.level / 30);
-        if (addInventoryItem(material, quality)) addBattleLog(`🧰 獲得素材：${material}${quality >= 0.5 ? `（品質 +${Math.round(quality * 100)}%）` : ''}。`, 'system');
+        if (addInventoryItem(material, quality)) {
+            addBattleLog(`🧰 獲得素材：${material}${quality >= 0.5 ? `（品質 +${Math.round(quality * 100)}%）` : ''}。`, 'system');
+        } else {
+            addBattleLog(`🎒 背包已滿，無法攜帶素材：${material}。`, 'system');
+        }
     }
 
     addBattleLog(`🎉 戰鬥勝利！\n獲得 ${expGain} 經驗值與 ${goldGain} 金幣！`, 'system');
@@ -2927,8 +3495,9 @@ function battleWin() {
         player.exp = 0;
         player.maxHp += 20;
         player.hp = player.maxHp;
-        player.attack += 3;
-        player.defense += 2;
+        player.baseStats.attack += 3;
+        player.baseStats.defense += 2;
+        recalculatePlayerStats();
         addBattleLog(`✨ 升級了！等級 ${player.level}`, 'system');
     }
 
@@ -3050,15 +3619,37 @@ function updateUI() {
 
     // 物品欄
     const inventory = document.getElementById('inventory');
+    document.getElementById('inventoryTitle').textContent = `背包 (${getBackpackSlotCount()}/${player.backpackCapacity})`;
     inventory.innerHTML = '';
     ensureInventoryQuality();
+    const inventoryGroups = new Map();
     player.inventory.forEach((item, index) => {
+        const group = inventoryGroups.get(item) || { count: 0, qualities: [] };
+        group.count++;
+        group.qualities.push(getInventoryQuality(index));
+        inventoryGroups.set(item, group);
+    });
+    inventoryGroups.forEach((group, item) => {
         const div = document.createElement('div');
         div.className = 'inventory-item';
-        const quality = getInventoryQuality(index);
-        div.textContent = quality > 0 ? `${item} · 優良 ${Math.round(quality * 100)}%` : item;
+        const qualityMin = group.qualities.reduce((min, quality) => Math.min(min, quality), 1);
+        const qualityMax = group.qualities.reduce((max, quality) => Math.max(max, quality), 0);
+        const qualityLabel = qualityMax <= 0 ? ''
+            : qualityMin === qualityMax
+                ? ` · 優良 +${Math.round(qualityMax * 100)}%`
+                : ` · 品質 +${Math.round(qualityMin * 100)}~${Math.round(qualityMax * 100)}%`;
+        div.textContent = `${item}${group.count > 1 ? ` ×${group.count}` : ''}${qualityLabel}`;
+        if (equipmentCatalog[item]) {
+            const equipButton = document.createElement('button');
+            equipButton.type = 'button';
+            equipButton.className = 'secondary-button';
+            equipButton.textContent = '裝備';
+            equipButton.onclick = () => equipItem(item);
+            div.appendChild(equipButton);
+        }
         inventory.appendChild(div);
     });
+    renderEquipmentSlots();
 
     // 生活技能
     document.getElementById('skillExploration').textContent = player.skills.exploration;
