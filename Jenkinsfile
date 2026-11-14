@@ -44,7 +44,8 @@ pipeline {
             }
         }
 
-        stage('Build Image') {            steps {
+        stage('Build Image') {
+            steps {
                 sh '''
                     echo "build image ${IMAGE_FULL}"
                     sudo docker build --pull --no-cache \
@@ -54,7 +55,8 @@ pipeline {
             }
         }
 
-        stage('Push to Harbor') {            steps {
+        stage('Push to Harbor') {
+            steps {
                 withCredentials([usernamePassword(credentialsId: 'harbor-credentials',
                                                   usernameVariable: 'HARBOR_USERNAME',
                                                   passwordVariable: 'HARBOR_PASSWORD')]) {
@@ -68,13 +70,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to K8S') {            steps {
+        stage('Deploy to K8S') {
+            steps {
                 sh '''
                     echo "deploy to configmap"
-                    bash /mnt/infra/configmap/${_ProjectName}/ezConfigmap.sh ${_customerName}
+                    bash /mnt/infra/configmap/${_projectName}/ezConfigmap.sh ${_customerName}
                     echo "deploy to EKS (Migration)"
 
-                    /mnt/infra/deploy/ezdeploy.sh ${_customerName}-${_projectName} ${_customerName} ${env.TIMESTAMP} ${env.BUILD_ID}
+                    /mnt/infra/deploy/ezdeploy.sh ${_customerName}-${_projectName} ${_customerName} ${TIMESTAMP} ${BUILD_ID}
                     
                     sleep 30
                     kubectl get pods
