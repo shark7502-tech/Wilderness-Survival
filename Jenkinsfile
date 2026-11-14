@@ -14,6 +14,24 @@ pipeline {
         _scanBlocking = "false"
     }
 
+    // 【安全】DAST 的開關與網址：會出現在 Jenkins 的「Build with Parameters」頁面
+    // - 推到 deploy 自動觸發時一律使用下面的預設值，所以預設不會跑檢測
+    // - 想跑檢測時：到 Jenkins 按 Build with Parameters，勾選要跑的項目再按 Build
+    // - 預設值以這個檔案為準：每次 build 後 Jenkins 會用這裡的內容覆蓋 Job 上的參數設定，
+    //   所以要永久更改網址請改這裡；只想臨時換網址，在介面上改那一次的值即可
+    parameters {
+        booleanParam(name: 'RUN_ZAP_BASELINE', defaultValue: false,
+                     description: '被動掃描 _staging_url：只瀏覽頁面、檢查回應，不送攻擊請求（約 1-2 分鐘）')
+        booleanParam(name: 'RUN_ZAP_FULL_SCAN', defaultValue: false,
+                     description: '主動掃描 _prod_url：會實際送出攻擊請求並寫入資料，可能改動玩家資料或讓服務變慢（10 分鐘以上）')
+        booleanParam(name: 'SCAN_ONLY', defaultValue: true,
+                     description: '有勾選上面任一項檢測時，只跑檢測、不重新建置與部署。取消勾選＝先部署再檢測')
+        string(name: '_staging_url', defaultValue: 'https://wilderness-survival.jarckson.com',
+               description: 'ZAP baseline（被動掃描）的目標網址')
+        string(name: '_prod_url', defaultValue: 'https://wilderness-survival.jarckson.com',
+               description: 'ZAP full-scan（主動掃描）的目標網址')
+    }
+
     options {
         timeout(time: 1, unit: 'HOURS')
         disableConcurrentBuilds()
@@ -45,6 +63,13 @@ pipeline {
                     env.IMAGE_TAG = "${env.TIMESTAMP}-${env.BUILD_ID}"
                     env.IMAGE_FULL = "${env._harborURL}/${env._customerName}/${env._customerName}-${env._projectName}:${env.IMAGE_TAG}"
                     currentBuild.description = "${env.IMAGE_TAG} (${env.GIT_SHORT_SHA})"
+
+                    // 只跑檢測模式：有勾檢測、且 SCAN_ONLY 也勾著 → 跳過建置與部署
+                    def scanRequested = params.RUN_ZAP_BASELINE || params.RUN_ZAP_FULL_SCAN
+                    env.DO_DEPLOY = (!(scanRequested && params.SCAN_ONLY)).toString()
+                    if (env.DO_DEPLOY != 'true') {
+                        currentBuild.description = "DAST only (${env.GIT_SHORT_SHA})"
+                    }
                 }
             }
         }
@@ -55,6 +80,7 @@ pipeline {
         // - 用 tar 把 package.json / package-lock.json 送進容器，而不是掛載目錄，
         //   這樣不管 Jenkins agent 本身是不是跑在容器裡都能用
         stage('Dependency Audit') {
+            when { expression { env.DO_DEPLOY == 'true' } }
             steps {
                 sh '''
                     echo "npm audit (blocking=${_scanBlocking})"
@@ -67,6 +93,7 @@ pipeline {
         }
 
         stage('Build Image') {
+            when { expression { env.DO_DEPLOY == 'true' } }
             steps {
                 sh '''
                     echo "build image ${IMAGE_FULL}"
@@ -84,6 +111,7 @@ pipeline {
         // - --ignore-unfixed：官方還沒出修正版的漏洞先略過（升級也解決不了）
         // - trivy-cache 是 docker volume，用來保存漏洞資料庫，避免每次都重新下載
         stage('Scan Image') {
+            when { expression { env.DO_DEPLOY == 'true' } }
             steps {
                 sh '''
                     echo "trivy scan ${IMAGE_FULL} (blocking=${_scanBlocking})"
@@ -99,6 +127,7 @@ pipeline {
         }
 
         stage('Push to Harbor') {
+            when { expression { env.DO_DEPLOY == 'true' } }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'harbor-credentials',
                                                   usernameVariable: 'HARBOR_USERNAME',
@@ -114,6 +143,7 @@ pipeline {
         }
 
         stage('Deploy to K8S') {
+            when { expression { env.DO_DEPLOY == 'true' } }
             steps {
                 sh '''
                     echo "deploy to configmap"
@@ -121,11 +151,72 @@ pipeline {
                     echo "deploy to EKS (Migration)"
 
                     /mnt/infra/deploy/ezdeploy.sh ${_customerName}-${_projectName} ${_customerName} ${TIMESTAMP} ${BUILD_ID}
-                    
+
                     sleep 30
                     kubectl get pods
-                    
+
                 '''
+            }
+        }
+
+        // 【安全】DAST 被動掃描（ZAP baseline）：對 _staging_url 執行
+        // - 只在 Build with Parameters 勾選 RUN_ZAP_BASELINE 時才會跑
+        // - 像一般訪客一樣瀏覽網站，檢查安全標頭、cookie 設定、資訊外洩等，不會送攻擊請求
+        // - -I：只有警告（WARN）時不算失敗，出現 FAIL 才算
+        // - 報告存成 zap-baseline-report.html，可在這次 build 的 Artifacts 下載
+        // - 用 docker cp 把報告拿出來而不是掛載目錄，Jenkins agent 跑在容器裡也能用
+        // - catchError：掃描發現問題時把 build 標成 UNSTABLE（黃色），後面的階段照常執行
+        stage('DAST Baseline') {
+            when { expression { params.RUN_ZAP_BASELINE } }
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    sh '''
+                        if [ -z "${_staging_url}" ]; then echo "_staging_url 沒有設定"; exit 1; fi
+                        echo "ZAP baseline scan: ${_staging_url}"
+                        name="zap-baseline-${BUILD_ID}"
+                        rc=0
+                        sudo docker run --name "$name" ghcr.io/zaproxy/zaproxy:stable sh -c \
+                            'mkdir -p /zap/wrk && zap-baseline.py -t "$0" -r report.html -I' "${_staging_url}" || rc=$?
+                        sudo docker cp "$name":/zap/wrk/report.html zap-baseline-report.html || true
+                        sudo docker rm -f "$name" || true
+                        exit $rc
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'zap-baseline-report.html', allowEmptyArchive: true
+                }
+            }
+        }
+
+        // 【安全】DAST 主動掃描（ZAP full-scan）：對 _prod_url 執行
+        // - 只在 Build with Parameters 勾選 RUN_ZAP_FULL_SCAN 時才會跑
+        // - 會實際送出攻擊請求（SQL injection、XSS 等）並對表單和 API 寫入資料：
+        //   目標是正式環境時，玩家資料可能被改動、服務可能變慢，請挑離峰時間執行
+        // - 時間較長（10 分鐘以上）；整條 pipeline 的上限是 options 裡的 1 小時
+        // - 報告存成 zap-full-scan-report.html，可在這次 build 的 Artifacts 下載
+        stage('DAST Full Scan') {
+            when { expression { params.RUN_ZAP_FULL_SCAN } }
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    sh '''
+                        if [ -z "${_prod_url}" ]; then echo "_prod_url 沒有設定"; exit 1; fi
+                        echo "ZAP full scan: ${_prod_url}"
+                        name="zap-full-scan-${BUILD_ID}"
+                        rc=0
+                        sudo docker run --name "$name" ghcr.io/zaproxy/zaproxy:stable sh -c \
+                            'mkdir -p /zap/wrk && zap-full-scan.py -t "$0" -r report.html -I' "${_prod_url}" || rc=$?
+                        sudo docker cp "$name":/zap/wrk/report.html zap-full-scan-report.html || true
+                        sudo docker rm -f "$name" || true
+                        exit $rc
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'zap-full-scan-report.html', allowEmptyArchive: true
+                }
             }
         }
     }
