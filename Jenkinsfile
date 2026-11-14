@@ -170,17 +170,9 @@ pipeline {
             when { expression { params.RUN_ZAP_BASELINE } }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    sh '''
-                        if [ -z "${_staging_url}" ]; then echo "_staging_url 沒有設定"; exit 1; fi
-                        echo "ZAP baseline scan: ${_staging_url}"
-                        name="zap-baseline-${BUILD_ID}"
-                        rc=0
-                        sudo docker run --name "$name" ghcr.io/zaproxy/zaproxy:stable sh -c \
-                            'mkdir -p /zap/wrk && zap-baseline.py -t "$0" -r report.html -I' "${_staging_url}" || rc=$?
-                        sudo docker cp "$name":/zap/wrk/report.html zap-baseline-report.html || true
-                        sudo docker rm -f "$name" || true
-                        exit $rc
-                    '''
+                    // 腳本放在 ml-flow-runner 上，不在這個 repo 裡
+                    // 參數：檢測類型、目標網址、報告檔名（說明見腳本開頭）
+                    sh 'bash /mnt/infra/deploy/zap-scan.sh baseline "${_staging_url}" zap-baseline-report.html'
                 }
             }
             post {
@@ -200,17 +192,7 @@ pipeline {
             when { expression { params.RUN_ZAP_FULL_SCAN } }
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    sh '''
-                        if [ -z "${_prod_url}" ]; then echo "_prod_url 沒有設定"; exit 1; fi
-                        echo "ZAP full scan: ${_prod_url}"
-                        name="zap-full-scan-${BUILD_ID}"
-                        rc=0
-                        sudo docker run --name "$name" ghcr.io/zaproxy/zaproxy:stable sh -c \
-                            'mkdir -p /zap/wrk && zap-full-scan.py -t "$0" -r report.html -I' "${_prod_url}" || rc=$?
-                        sudo docker cp "$name":/zap/wrk/report.html zap-full-scan-report.html || true
-                        sudo docker rm -f "$name" || true
-                        exit $rc
-                    '''
+                    sh 'bash /mnt/infra/deploy/zap-scan.sh fullscan "${_prod_url}" zap-full-scan-report.html'
                 }
             }
             post {
