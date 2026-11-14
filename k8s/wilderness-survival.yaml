@@ -1,0 +1,58 @@
+# Jenkins 部署時會把 __IMAGE__ 換成 harbor.agent7.net/prod/wilderness-survival:<tag>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wilderness-survival
+  labels:
+    app: wilderness-survival
+spec:
+  # 玩家資料存在記憶體、Socket.IO 沒有共享狀態，只能跑 1 份
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wilderness-survival
+  template:
+    metadata:
+      labels:
+        app: wilderness-survival
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull-secret
+      containers:
+        - name: wilderness-survival
+          image: __IMAGE__
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+          readinessProbe:
+            httpGet:
+              path: /game.html
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /game.html
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wilderness-survival
+spec:
+  selector:
+    app: wilderness-survival
+  ports:
+    - port: 80
+      targetPort: 3000
