@@ -23,6 +23,9 @@ app.use(bodyParser.json());
 const staticPath = path.resolve(__dirname, '..', 'src');
 app.use(express.static(staticPath));
 
+// 沒有 index.html，首頁導到遊戲頁
+app.get('/', (req, res) => res.redirect('/game.html'));
+
 // In-memory players store (prototype)
 // Each player: { id, name, location, progress, items: [], socketId, lastSeen }
 const players = new Map();
