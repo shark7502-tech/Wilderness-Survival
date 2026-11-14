@@ -38,7 +38,7 @@ pipeline {
                     def scmVars = checkout scm
                     env.GIT_SHORT_SHA = scmVars.GIT_COMMIT.take(7)
                     env.IMAGE_TAG = "${env.TIMESTAMP}-${env.BUILD_ID}"
-                    env.IMAGE_FULL = "${env._harborURL}/${env._customerName}/${env._projectName}:${env.IMAGE_TAG}"
+                    env.IMAGE_FULL = "${env._harborURL}/${env._customerName}/${env.customerName}-${env._projectName}:${env.IMAGE_TAG}"
                     currentBuild.description = "${env.IMAGE_TAG} (${env.GIT_SHORT_SHA})"
                 }
             }
