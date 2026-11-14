@@ -7,6 +7,11 @@ pipeline {
         _projectName   = "wilderness-survival"
         _harborURL   = "harbor.agent7.net"
         TIMESTAMP = sh(script: "date +%Y%m%d", returnStdout: true).trim()
+
+        // 安全掃描的處理方式：
+        //   "false" = 只在 log 列出漏洞，不影響部署（剛導入時先用這個看現況）
+        //   "true"  = 發現 HIGH / CRITICAL 漏洞就讓 build 失敗，不會部署
+        _scanBlocking = "false"
     }
 
     options {
@@ -44,6 +49,23 @@ pipeline {
             }
         }
 
+        // 【安全】依賴掃描：檢查 npm 套件有沒有已知漏洞
+        // - 只看正式環境會用到的套件（--omit=dev），門檻是 high 以上
+        // - 放在 Build Image 之前：套件有問題就不用浪費時間 build
+        // - 用 tar 把 package.json / package-lock.json 送進容器，而不是掛載目錄，
+        //   這樣不管 Jenkins agent 本身是不是跑在容器裡都能用
+        stage('Dependency Audit') {
+            steps {
+                sh '''
+                    echo "npm audit (blocking=${_scanBlocking})"
+                    tar -C X/server -c package.json package-lock.json \
+                        | sudo docker run --rm -i node:22-alpine sh -c \
+                            'mkdir /audit && cd /audit && tar -x && npm audit --omit=dev --audit-level=high' \
+                        || [ "${_scanBlocking}" != "true" ]
+                '''
+            }
+        }
+
         stage('Build Image') {
             steps {
                 sh '''
@@ -51,6 +73,27 @@ pipeline {
                     sudo docker build --pull --no-cache \
                         --label git-commit=${GIT_SHORT_SHA} \
                         -t ${IMAGE_FULL} X
+                '''
+            }
+        }
+
+        // 【安全】Image 掃描：用 Trivy 檢查剛 build 好的 image
+        // - 會掃基底 image（node:22-alpine）的系統套件，以及 image 裡的 npm 套件
+        // - 放在 Push to Harbor 之前：有漏洞的 image 不會進到 Harbor，也就不會被部署
+        // - --severity HIGH,CRITICAL：只管高風險以上
+        // - --ignore-unfixed：官方還沒出修正版的漏洞先略過（升級也解決不了）
+        // - trivy-cache 是 docker volume，用來保存漏洞資料庫，避免每次都重新下載
+        stage('Scan Image') {
+            steps {
+                sh '''
+                    echo "trivy scan ${IMAGE_FULL} (blocking=${_scanBlocking})"
+                    sudo docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v trivy-cache:/root/.cache/ \
+                        aquasec/trivy:latest image \
+                        --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+                        ${IMAGE_FULL} \
+                        || [ "${_scanBlocking}" != "true" ]
                 '''
             }
         }
