@@ -73,22 +73,22 @@ pipeline {
                 }
             }
         }
-
-        // 【安全】依賴掃描：檢查 npm 套件有沒有已知漏洞
-        // - 只看正式環境會用到的套件（--omit=dev），門檻是 high 以上
-        // - 放在 Build Image 之前：套件有問題就不用浪費時間 build
-        // - 用 tar 把 package.json / package-lock.json 送進容器，而不是掛載目錄，
-        //   這樣不管 Jenkins agent 本身是不是跑在容器裡都能用
         stage('Dependency Audit') {
             when { expression { env.DO_DEPLOY == 'true' } }
             steps {
+                // 腳本放在 ml-flow-runner 上，不在這個 repo 裡
+                // 參數：掃描類型、目標、報告檔名（說明見腳本開頭）
+                // fs = 讀 X/server 裡的 package-lock.json 掃相依套件
                 sh '''
-                    echo "npm audit (blocking=${_scanBlocking})"
-                    tar -C X/server -c package.json package-lock.json \
-                        | sudo docker run --rm -i node:22-alpine sh -c \
-                            'mkdir /audit && cd /audit && tar -x && npm audit --omit=dev --audit-level=high' \
+                    echo "dependency scan (blocking=${_scanBlocking})"
+                    bash /mnt/infra/deploy/trivy-scan.sh fs X/server dep-scan-report.txt \
                         || [ "${_scanBlocking}" != "true" ]
                 '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'dep-scan-report.txt', allowEmptyArchive: true
+                }
             }
         }
 
@@ -103,26 +103,20 @@ pipeline {
                 '''
             }
         }
-
-        // 【安全】Image 掃描：用 Trivy 檢查剛 build 好的 image
-        // - 會掃基底 image（node:22-alpine）的系統套件，以及 image 裡的 npm 套件
-        // - 放在 Push to Harbor 之前：有漏洞的 image 不會進到 Harbor，也就不會被部署
-        // - --severity HIGH,CRITICAL：只管高風險以上
-        // - --ignore-unfixed：官方還沒出修正版的漏洞先略過（升級也解決不了）
-        // - trivy-cache 是 docker volume，用來保存漏洞資料庫，避免每次都重新下載
         stage('Scan Image') {
             when { expression { env.DO_DEPLOY == 'true' } }
             steps {
+                // image = 掃剛 build 好的 image，包含基底 image 的系統套件
                 sh '''
-                    echo "trivy scan ${IMAGE_FULL} (blocking=${_scanBlocking})"
-                    sudo docker run --rm \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v trivy-cache:/root/.cache/ \
-                        aquasec/trivy:latest image \
-                        --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
-                        ${IMAGE_FULL} \
+                    echo "image scan ${IMAGE_FULL} (blocking=${_scanBlocking})"
+                    bash /mnt/infra/deploy/trivy-scan.sh image "${IMAGE_FULL}" image-scan-report.txt \
                         || [ "${_scanBlocking}" != "true" ]
                 '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'image-scan-report.txt', allowEmptyArchive: true
+                }
             }
         }
 
@@ -159,13 +153,6 @@ pipeline {
             }
         }
 
-        // 【安全】DAST 被動掃描（ZAP baseline）：對 _staging_url 執行
-        // - 只在 Build with Parameters 勾選 RUN_ZAP_BASELINE 時才會跑
-        // - 像一般訪客一樣瀏覽網站，檢查安全標頭、cookie 設定、資訊外洩等，不會送攻擊請求
-        // - -I：只有警告（WARN）時不算失敗，出現 FAIL 才算
-        // - 報告存成 zap-baseline-report.html，可在這次 build 的 Artifacts 下載
-        // - 用 docker cp 把報告拿出來而不是掛載目錄，Jenkins agent 跑在容器裡也能用
-        // - catchError：掃描發現問題時把 build 標成 UNSTABLE（黃色），後面的階段照常執行
         stage('DAST Baseline') {
             when { expression { params.RUN_ZAP_BASELINE } }
             steps {
@@ -182,12 +169,6 @@ pipeline {
             }
         }
 
-        // 【安全】DAST 主動掃描（ZAP full-scan）：對 _prod_url 執行
-        // - 只在 Build with Parameters 勾選 RUN_ZAP_FULL_SCAN 時才會跑
-        // - 會實際送出攻擊請求（SQL injection、XSS 等）並對表單和 API 寫入資料：
-        //   目標是正式環境時，玩家資料可能被改動、服務可能變慢，請挑離峰時間執行
-        // - 時間較長（10 分鐘以上）；整條 pipeline 的上限是 options 裡的 1 小時
-        // - 報告存成 zap-full-scan-report.html，可在這次 build 的 Artifacts 下載
         stage('DAST Full Scan') {
             when { expression { params.RUN_ZAP_FULL_SCAN } }
             steps {
